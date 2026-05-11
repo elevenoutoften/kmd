@@ -68,27 +68,37 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Disable updater artifacts (no signing key)
-        if: secrets.TAURI_SIGNING_PRIVATE_KEY == ''
+      - name: Disable updater artifacts when no signing key
         shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          cd src-tauri
-          node -e "
-            const fs = require('fs');
-            const conf = JSON.parse(fs.readFileSync('tauri.conf.json', 'utf8'));
-            conf.bundle.createUpdaterArtifacts = false;
-            fs.writeFileSync('tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
-            console.log('Disabled createUpdaterArtifacts (no signing key)');
-          "
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            cd src-tauri
+            node -e "
+              const fs = require('fs');
+              const conf = JSON.parse(fs.readFileSync('tauri.conf.json', 'utf8'));
+              conf.bundle.createUpdaterArtifacts = false;
+              fs.writeFileSync('tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+              console.log('Disabled createUpdaterArtifacts (no signing key)');
+            "
+          else
+            echo "Signing key present — keeping createUpdaterArtifacts enabled"
+          fi
 
       - name: Import Apple Developer ID certificate
-        if: matrix.family == 'macos' && secrets.APPLE_CERTIFICATE != ''
+        if: matrix.family == 'macos'
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "Skipping — Apple signing secrets not configured"
+            exit 0
+          fi
+
           certificate_path="$RUNNER_TEMP/developer-id-application.p12"
           keychain_path="$RUNNER_TEMP/kmd-signing.keychain-db"
           keychain_password="$(openssl rand -base64 32)"
@@ -130,13 +140,17 @@ jobs:
           releaseBody: "Download the desktop installers from the assets below."
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+          includeUpdaterJson: false
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }}
 
       - name: Package macOS portable app
         if: matrix.family == 'macos'
         shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
           version="${{ steps.package.outputs.version }}"
@@ -148,15 +162,15 @@ jobs:
           fi
 
           # Sign and notarize only if Apple secrets are configured
-          if [ -n "${{ secrets.APPLE_ID }}" ]; then
+          if [ -n "$APPLE_ID" ]; then
             codesign --verify --deep --strict --verbose=2 "$app_path"
 
             notary_zip="$RUNNER_TEMP/kmd-${{ matrix.portableName }}-notary.zip"
             ditto -c -k --keepParent "$app_path" "$notary_zip"
             xcrun notarytool submit "$notary_zip" \
-              --apple-id "${{ secrets.APPLE_ID }}" \
-              --password "${{ secrets.APPLE_PASSWORD }}" \
-              --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
               --wait
             xcrun stapler staple "$app_path"
             xcrun stapler validate "$app_path"
