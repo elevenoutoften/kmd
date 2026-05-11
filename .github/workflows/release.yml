@@ -68,31 +68,21 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Validate macOS signing secrets
-        if: matrix.family == 'macos'
+      - name: Disable updater artifacts (no signing key)
+        if: secrets.TAURI_SIGNING_PRIVATE_KEY == ''
         shell: bash
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          set -euo pipefail
-          missing=()
-          [ -n "$APPLE_CERTIFICATE" ] || missing+=("APPLE_CERTIFICATE")
-          [ -n "$APPLE_CERTIFICATE_PASSWORD" ] || missing+=("APPLE_CERTIFICATE_PASSWORD")
-          [ -n "$APPLE_ID" ] || missing+=("APPLE_ID")
-          [ -n "$APPLE_PASSWORD" ] || missing+=("APPLE_PASSWORD")
-          [ -n "$APPLE_TEAM_ID" ] || missing+=("APPLE_TEAM_ID")
-
-          if [ "${#missing[@]}" -gt 0 ]; then
-            printf 'Missing required macOS signing/notarization secrets: %s\n' "${missing[*]}" >&2
-            exit 1
-          fi
+          cd src-tauri
+          node -e "
+            const fs = require('fs');
+            const conf = JSON.parse(fs.readFileSync('tauri.conf.json', 'utf8'));
+            conf.bundle.createUpdaterArtifacts = false;
+            fs.writeFileSync('tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+            console.log('Disabled createUpdaterArtifacts (no signing key)');
+          "
 
       - name: Import Apple Developer ID certificate
-        if: matrix.family == 'macos'
+        if: matrix.family == 'macos' && secrets.APPLE_CERTIFICATE != ''
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -125,18 +115,6 @@ jobs:
 
           echo "APPLE_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
 
-      - name: Build Windows portable app
-        if: matrix.family == 'windows'
-        shell: pwsh
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
-        run: |
-          npm run tauri:portable
-          $version = "${{ steps.package.outputs.version }}"
-          $output = "kmd_${version}_${{ matrix.portableName }}-portable.exe"
-          Copy-Item -LiteralPath "src-tauri/target/release/kmd.exe" -Destination $output -Force
-
       - name: Build and publish release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -149,20 +127,16 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "kmd v__VERSION__"
-          releaseBody: "Portable downloads are preferred: use the macOS Apple Silicon .dmg or .app.zip, the macOS Intel .dmg or .app.zip, or the Windows portable .exe. Installer and updater artifacts are attached for users who want them."
+          releaseBody: "Download the desktop installers from the assets below."
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: true
+          includeUpdaterJson: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }}
 
       - name: Package macOS portable app
         if: matrix.family == 'macos'
         shell: bash
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
           version="${{ steps.package.outputs.version }}"
@@ -173,20 +147,33 @@ jobs:
             exit 1
           fi
 
-          codesign --verify --deep --strict --verbose=2 "$app_path"
+          # Sign and notarize only if Apple secrets are configured
+          if [ -n "${{ secrets.APPLE_ID }}" ]; then
+            codesign --verify --deep --strict --verbose=2 "$app_path"
 
-          notary_zip="$RUNNER_TEMP/kmd-${{ matrix.portableName }}-notary.zip"
-          ditto -c -k --keepParent "$app_path" "$notary_zip"
-          xcrun notarytool submit "$notary_zip" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
-            --wait
-          xcrun stapler staple "$app_path"
-          xcrun stapler validate "$app_path"
-          spctl --assess --type execute --verbose=4 "$app_path"
+            notary_zip="$RUNNER_TEMP/kmd-${{ matrix.portableName }}-notary.zip"
+            ditto -c -k --keepParent "$app_path" "$notary_zip"
+            xcrun notarytool submit "$notary_zip" \
+              --apple-id "${{ secrets.APPLE_ID }}" \
+              --password "${{ secrets.APPLE_PASSWORD }}" \
+              --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+              --wait
+            xcrun stapler staple "$app_path"
+            xcrun stapler validate "$app_path"
+            spctl --assess --type execute --verbose=4 "$app_path"
+          else
+            echo "Skipping codesign/notarization — Apple secrets not configured"
+          fi
 
           ditto -c -k --keepParent "$app_path" "$output"
+
+      - name: Build Windows portable app
+        if: matrix.family == 'windows'
+        shell: pwsh
+        run: |
+          $version = "${{ steps.package.outputs.version }}"
+          $output = "kmd_${version}_${{ matrix.portableName }}-portable.exe"
+          Copy-Item -LiteralPath "src-tauri/target/release/kmd.exe" -Destination $output -Force
 
       - name: Upload portable release asset
         uses: softprops/action-gh-release@v2

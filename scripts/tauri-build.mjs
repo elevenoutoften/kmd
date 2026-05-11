@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
+import { readFileSync as readSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 
 const env = { ...process.env };
@@ -16,10 +17,11 @@ if (!env.TAURI_SIGNING_PRIVATE_KEY && !env.TAURI_SIGNING_PRIVATE_KEY_PATH && exi
   env.TAURI_SIGNING_PRIVATE_KEY = readFileSync(defaultKeyPath, "utf8");
 }
 
-if (!env.TAURI_SIGNING_PRIVATE_KEY) {
-  console.error("Tauri updater signing key not found.");
-  console.error(`Set TAURI_SIGNING_PRIVATE_KEY or place a key at ${defaultKeyPath}.`);
-  process.exit(1);
+const hasSigningKey = !!env.TAURI_SIGNING_PRIVATE_KEY;
+
+if (!hasSigningKey) {
+  console.warn("Tauri updater signing key not found — building without updater artifacts.");
+  console.warn(`Set TAURI_SIGNING_PRIVATE_KEY or place a key at ${defaultKeyPath} to enable updater signing.`);
 }
 
 if (!("TAURI_SIGNING_PRIVATE_KEY_PASSWORD" in env)) {
@@ -35,6 +37,16 @@ if (!pathEntries.includes(defaultCargoBinPath)) {
 }
 env[pathKey] = pathEntries.join(delimiter);
 
+// Patch tauri.conf.json: disable createUpdaterArtifacts when no signing key
+const confPath = join(process.cwd(), "src-tauri", "tauri.conf.json");
+const conf = JSON.parse(readFileSync(confPath, "utf8"));
+const originalUpdaterArtifacts = conf.bundle?.createUpdaterArtifacts;
+if (!hasSigningKey && conf.bundle?.createUpdaterArtifacts) {
+  conf.bundle.createUpdaterArtifacts = false;
+  writeFileSync(confPath, JSON.stringify(conf, null, 2) + "\n");
+  console.log("Patched tauri.conf.json: createUpdaterArtifacts = false (no signing key)");
+}
+
 const syncIcons = spawn(process.execPath, [syncIconsPath], {
   cwd: process.cwd(),
   env,
@@ -43,16 +55,26 @@ const syncIcons = spawn(process.execPath, [syncIconsPath], {
 
 syncIcons.on("exit", (syncCode) => {
   if (syncCode !== 0) {
+    // Restore original conf
+    if (!hasSigningKey && originalUpdaterArtifacts) {
+      conf.bundle.createUpdaterArtifacts = originalUpdaterArtifacts;
+      writeFileSync(confPath, JSON.stringify(conf, null, 2) + "\n");
+    }
     process.exit(syncCode ?? 1);
   }
 
-const child = spawn(process.execPath, [tauriCliPath, "build", ...tauriArgs], {
-  cwd: process.cwd(),
-  env,
-  stdio: "inherit",
-});
+  const child = spawn(process.execPath, [tauriCliPath, "build", ...tauriArgs], {
+    cwd: process.cwd(),
+    env,
+    stdio: "inherit",
+  });
 
-child.on("exit", (code) => {
-  process.exit(code ?? 1);
-});
+  child.on("exit", (code) => {
+    // Restore original conf
+    if (!hasSigningKey && originalUpdaterArtifacts) {
+      conf.bundle.createUpdaterArtifacts = originalUpdaterArtifacts;
+      writeFileSync(confPath, JSON.stringify(conf, null, 2) + "\n");
+    }
+    process.exit(code ?? 1);
+  });
 });
