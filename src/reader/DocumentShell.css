@@ -1,0 +1,159 @@
+/* ---- Reader layout ---- */
+
+.reader-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.mdr-doc {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-md) var(--space-md);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: margin-left 0.2s ease;
+}
+
+.mdr-content {
+  width: 100%;
+  min-width: 0;
+  max-width: var(--content-max-width);
+}
+
+/* ---- Outline sidebar ---- */
+
+.outline-sidebar {
+  width: var(--sidebar-width);
+  min-height: 0;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  overflow-y: auto;
+  padding: var(--space-md);
+  transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
+}
+
+.outline-sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  border-right: none;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.outline-title {
+  font-size: var(--font-size-label-caps);
+  font-weight: var(--font-weight-label-caps);
+  letter-spacing: var(--letter-spacing-label-caps);
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.outline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-list li {
+  position: relative;
+  min-width: 0;
+}
+
+.outline-item {
+  display: block;
+  position: relative;
+  z-index: 0;
+  padding: 4px 14px 4px 14px;
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-body-sm);
+  border-radius: var(--radius-sm);
+  transition: color 0.1s ease, border-color 0.1s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outline-item:hover {
+  color: var(--color-on-surface);
+}
+
+.outline-item::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 2px -2px;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  transition: background-color 0.1s ease;
+}
+
+.outline-item:hover::before {
+  background-color: var(--color-surface-muted);
+}
+
+.outline-item[data-depth="0"] {
+  font-weight: 700;
+  font-size: var(--font-size-body-md);
+  color: var(--outline-depth-0-color);
+  margin-bottom: var(--space-xs);
+}
+
+.outline-item[data-depth="1"] {
+  font-weight: 600;
+  color: var(--outline-depth-1-color);
+  margin-top: var(--space-sm);
+}
+
+.outline-item[data-depth="2"] {
+  padding-left: calc(14px + var(--space-md));
+  color: var(--outline-depth-2-color);
+}
+
+.outline-item[data-depth="3"] {
+  padding-left: calc(14px + var(--space-md) * 2);
+  font-size: 12px;
+  color: var(--outline-depth-3-color);
+}
+
+.outline-item.active {
+  color: var(--color-on-surface);
+  border-left: 2px solid var(--outline-active-border);
+}
+
+.outline-item.active::before {
+  background-color: var(--outline-active-bg);
+}
+
+/* Outline toggle button — flex item between sidebar and content */
+.outline-toggle {
+  width: var(--toggle-width);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: none;
+  border-right: none;
+  color: var(--color-secondary);
+  cursor: pointer;
+  font-size: 10px;
+  transition: color 0.1s ease, background-color 0.1s ease;
+  align-self: stretch;
+}
+
+.outline-toggle:hover {
+  color: var(--color-on-surface);
+  background-color: var(--color-surface-muted);
+}

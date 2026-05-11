@@ -1,0 +1,127 @@
+.welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: var(--space-xl);
+}
+
+.welcome-inner {
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+.welcome-title {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-on-surface);
+  margin-bottom: var(--space-xs);
+}
+
+.welcome-subtitle {
+  font-size: var(--font-size-body-sm);
+  color: var(--color-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.welcome-open-btn {
+  display: inline-block;
+  padding: 10px 28px;
+  font-size: var(--font-size-body-md);
+  font-weight: 600;
+  color: var(--color-on-primary);
+  background-color: var(--color-tertiary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.welcome-open-btn:hover {
+  opacity: 0.85;
+}
+
+.welcome-shortcut-hint {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-body-sm);
+  color: var(--color-secondary);
+}
+
+.welcome-shortcut-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background-color: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+}
+
+.welcome-recent {
+  margin-top: var(--space-xl);
+  text-align: left;
+}
+
+.welcome-recent-heading {
+  font-size: var(--font-size-label-caps);
+  font-weight: var(--font-weight-label-caps);
+  letter-spacing: var(--letter-spacing-label-caps);
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.welcome-recent-loading {
+  font-size: var(--font-size-body-sm);
+  color: var(--color-secondary);
+  padding: var(--space-sm) 0;
+}
+
+.welcome-recent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.welcome-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+}
+
+.welcome-recent-item:hover {
+  background-color: var(--color-surface-muted);
+}
+
+.welcome-recent-name {
+  font-size: var(--font-size-body-sm);
+  font-weight: 500;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.welcome-recent-date {
+  font-size: var(--font-size-label-caps);
+  color: var(--color-secondary);
+  flex-shrink: 0;
+  margin-left: var(--space-md);
+}

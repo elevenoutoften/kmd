@@ -1,0 +1,14 @@
+{
+  "identifier": "default",
+  "description": "allows default permissions",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-set-title",
+    "dialog:default",
+    "opener:default",
+    "process:default",
+    "updater:default"
+  ]
+}

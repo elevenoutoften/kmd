@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an improvement for kmd.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What reading, rendering, or workflow problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What would you like kmd to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Reader
+        - Design Mode
+        - Markdown parsing
+        - Security/privacy
+        - Desktop shell
+        - Release/build
+        - Documentation
+        - Other
+    validations:
+      required: true

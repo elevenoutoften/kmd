@@ -1,0 +1,499 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`runDesignPipeline fixtures > fixture: apple.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0.6,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 1,
+  },
+  "tokenCounts": {
+    "colors": 23,
+    "components": 22,
+    "elevation": 0,
+    "layout": 0,
+    "radii": 8,
+    "spacing": 8,
+    "surface": 0,
+    "typography": 16,
+  },
+  "tokenSamples": {
+    "colors": [
+      {
+        "extractor": "yaml",
+        "name": "color-primary",
+        "value": "#007AFF",
+      },
+      {
+        "extractor": "yaml",
+        "name": "color-secondary",
+        "value": "#5856D6",
+      },
+      {
+        "extractor": "yaml",
+        "name": "color-tertiary",
+        "value": "#FF9500",
+      },
+    ],
+    "components": [
+      {
+        "extractor": "yaml",
+        "name": "button-primary",
+        "value": {
+          "background": "#007AFF",
+          "foreground": "#FFFFFF",
+          "padding": "12px 24px",
+          "radius": "12px",
+        },
+      },
+      {
+        "extractor": "yaml",
+        "name": "button-secondary",
+        "value": {
+          "background": "#F2F2F7",
+          "foreground": "#007AFF",
+          "padding": "12px 24px",
+          "radius": "12px",
+        },
+      },
+      {
+        "extractor": "yaml",
+        "name": "button-text",
+        "value": {
+          "background": "transparent",
+          "foreground": "#007AFF",
+          "padding": "8px 12px",
+          "radius": "8px",
+        },
+      },
+    ],
+    "radii": [
+      {
+        "extractor": "yaml",
+        "name": "radius-xs",
+        "value": "4px",
+      },
+      {
+        "extractor": "yaml",
+        "name": "radius-sm",
+        "value": "8px",
+      },
+      {
+        "extractor": "yaml",
+        "name": "radius-md",
+        "value": "12px",
+      },
+    ],
+    "spacing": [
+      {
+        "extractor": "yaml",
+        "name": "space-xxxs",
+        "value": "2px",
+      },
+      {
+        "extractor": "yaml",
+        "name": "space-xxs",
+        "value": "4px",
+      },
+      {
+        "extractor": "yaml",
+        "name": "space-xs",
+        "value": "8px",
+      },
+    ],
+    "typography": [
+      {
+        "extractor": "yaml",
+        "name": "hero-display",
+        "value": "{"font-family":"\\"SF Pro Display\\", system-ui, -apple-system, sans-serif","font-size":"34px","font-weight":"700","line-height":"1.2","letter-spacing":"-0.02em"}",
+      },
+      {
+        "extractor": "yaml",
+        "name": "headline",
+        "value": "{"font-family":"\\"SF Pro Display\\", system-ui, -apple-system, sans-serif","font-size":"28px","font-weight":"700","line-height":"1.25","letter-spacing":"-0.01em"}",
+      },
+      {
+        "extractor": "yaml",
+        "name": "title-large",
+        "value": "{"font-family":"\\"SF Pro Display\\", system-ui, -apple-system, sans-serif","font-size":"22px","font-weight":"600","line-height":"1.3","letter-spacing":"0em"}",
+      },
+    ],
+  },
+}
+`;
+
+exports[`runDesignPipeline fixtures > fixture: dylanbrouwer.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0.6,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 1,
+  },
+  "tokenCounts": {
+    "colors": 21,
+    "components": 0,
+    "elevation": 3,
+    "layout": 6,
+    "radii": 5,
+    "spacing": 18,
+    "surface": 4,
+    "typography": 15,
+  },
+  "tokenSamples": {
+    "colors": [
+      {
+        "extractor": "table",
+        "name": "Canvas",
+        "value": "#ffffff",
+      },
+      {
+        "extractor": "table",
+        "name": "Ink",
+        "value": "#17191c",
+      },
+      {
+        "extractor": "table",
+        "name": "Graphite",
+        "value": "#000000",
+      },
+    ],
+    "elevation": [
+      {
+        "extractor": "css",
+        "name": "subtle",
+        "value": "0 1px 2px rgba(0,0,0,0.05)",
+      },
+      {
+        "extractor": "css",
+        "name": "medium",
+        "value": "0 4px 6px rgba(0,0,0,0.07)",
+      },
+      {
+        "extractor": "css",
+        "name": "large",
+        "value": "0 10px 15px rgba(0,0,0,0.1)",
+      },
+    ],
+    "layout": [
+      {
+        "extractor": "prose",
+        "name": "Theme",
+        "value": "Light",
+      },
+      {
+        "extractor": "prose",
+        "name": "Density",
+        "value": "Comfortable",
+      },
+      {
+        "extractor": "prose",
+        "name": "Base unit",
+        "value": "4px",
+      },
+    ],
+    "radii": [
+      {
+        "extractor": "css",
+        "name": "card",
+        "value": "24px",
+      },
+      {
+        "extractor": "css",
+        "name": "image",
+        "value": "12px",
+      },
+      {
+        "extractor": "css",
+        "name": "input",
+        "value": "16px",
+      },
+    ],
+    "spacing": [
+      {
+        "extractor": "table",
+        "name": "--spacing-4",
+        "value": "4px",
+      },
+      {
+        "extractor": "table",
+        "name": "--spacing-8",
+        "value": "8px",
+      },
+      {
+        "extractor": "table",
+        "name": "--spacing-12",
+        "value": "12px",
+      },
+    ],
+    "surface": [
+      {
+        "extractor": "table",
+        "name": "Canvas",
+        "value": "#ffffff",
+      },
+      {
+        "extractor": "table",
+        "name": "Fog",
+        "value": "#f7f7f8",
+      },
+      {
+        "extractor": "table",
+        "name": "Warm Mist",
+        "value": "#fbe1d1",
+      },
+    ],
+    "typography": [
+      {
+        "extractor": "table",
+        "name": "caption",
+        "value": "size:14px; line-height:1.43",
+      },
+      {
+        "extractor": "table",
+        "name": "heading",
+        "value": "size:22px; line-height:1.18",
+      },
+      {
+        "extractor": "table",
+        "name": "heading-lg",
+        "value": "size:26px; line-height:1; letter-spacing:-0.23px",
+      },
+    ],
+  },
+}
+`;
+
+exports[`runDesignPipeline fixtures > fixture: shopvibe.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0.5,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 15,
+  },
+  "tokenCounts": {
+    "colors": 9,
+    "components": 7,
+    "elevation": 4,
+    "layout": 0,
+    "radii": 6,
+    "spacing": 9,
+    "surface": 0,
+    "typography": 9,
+  },
+  "tokenSamples": {
+    "colors": [
+      {
+        "extractor": "prose",
+        "name": "Primary",
+        "value": "#D946EF",
+      },
+      {
+        "extractor": "prose",
+        "name": "Secondary",
+        "value": "#22D3EE",
+      },
+      {
+        "extractor": "prose",
+        "name": "Tertiary",
+        "value": "#FACC15",
+      },
+    ],
+    "components": [
+      {
+        "extractor": "prose",
+        "name": "Primary",
+        "value": {
+          "background": "#D946EF",
+          "description": "Fuchsia background (#D946EF), white text, pill shape, 12px 24px padding. Main action buttons.",
+          "family": "button",
+          "shape": "pill",
+        },
+      },
+      {
+        "extractor": "prose",
+        "name": "Secondary",
+        "value": {
+          "background": "transparent",
+          "border-width": "1px",
+          "description": "Transparent background, #D946EF text, 1px #D946EF border, pill shape. Alternative actions.",
+          "family": "button",
+          "shape": "pill",
+        },
+      },
+      {
+        "extractor": "prose",
+        "name": "Ghost",
+        "value": {
+          "background": "transparent",
+          "border": "none",
+          "description": "Transparent background, Text Secondary (#6B7280), no border. Tertiary actions.",
+          "family": "button",
+          "foreground": "#6B7280",
+        },
+      },
+    ],
+    "elevation": [
+      {
+        "extractor": "prose",
+        "name": "Subtle",
+        "value": "0 1px 2px rgba(0,0,0,0.05)",
+      },
+      {
+        "extractor": "prose",
+        "name": "Medium",
+        "value": "0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06)",
+      },
+      {
+        "extractor": "prose",
+        "name": "Large",
+        "value": "0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)",
+      },
+    ],
+    "radii": [
+      {
+        "extractor": "prose",
+        "name": "Small",
+        "value": "4px",
+      },
+      {
+        "extractor": "prose",
+        "name": "Medium",
+        "value": "12px",
+      },
+      {
+        "extractor": "prose",
+        "name": "Large",
+        "value": "16px",
+      },
+    ],
+    "spacing": [
+      {
+        "extractor": "prose",
+        "name": "xs",
+        "value": "4px",
+      },
+      {
+        "extractor": "prose",
+        "name": "sm",
+        "value": "8px",
+      },
+      {
+        "extractor": "prose",
+        "name": "md",
+        "value": "12px",
+      },
+    ],
+    "typography": [
+      {
+        "extractor": "prose",
+        "name": "Display",
+        "value": "family:Poppins; size:56px; weight:800; line-height:1.1; letter-spacing:0.02em",
+      },
+      {
+        "extractor": "prose",
+        "name": "Headline",
+        "value": "family:Poppins; size:40px; weight:700; line-height:1.2; letter-spacing:0.01em",
+      },
+      {
+        "extractor": "prose",
+        "name": "Subhead",
+        "value": "family:Poppins; size:26px; weight:600; line-height:1.3",
+      },
+    ],
+  },
+}
+`;
+
+exports[`runDesignPipeline fixtures > fixture: synthetic-dtcg.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 0,
+  },
+  "tokenCounts": {
+    "colors": 0,
+    "components": 0,
+    "elevation": 0,
+    "layout": 0,
+    "radii": 0,
+    "spacing": 0,
+    "surface": 0,
+    "typography": 0,
+  },
+  "tokenSamples": {},
+}
+`;
+
+exports[`runDesignPipeline fixtures > fixture: synthetic-hybrid.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0.3,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 1,
+  },
+  "tokenCounts": {
+    "colors": 6,
+    "components": 0,
+    "elevation": 0,
+    "layout": 0,
+    "radii": 0,
+    "spacing": 1,
+    "surface": 0,
+    "typography": 0,
+  },
+  "tokenSamples": {
+    "colors": [
+      {
+        "extractor": "yaml",
+        "name": "primary",
+        "value": "#FF0000",
+      },
+      {
+        "extractor": "table",
+        "name": "Primary",
+        "value": "#00FF00",
+      },
+      {
+        "extractor": "table",
+        "name": "Surface",
+        "value": "#FFFFFF",
+      },
+    ],
+    "spacing": [
+      {
+        "extractor": "css",
+        "name": "md",
+        "value": "16px",
+      },
+    ],
+  },
+}
+`;
+
+exports[`runDesignPipeline fixtures > fixture: synthetic-prose-only.md > snapshot matches 1`] = `
+{
+  "detectionScore": 0.1,
+  "diagnosticsBySeverity": {
+    "error": 0,
+    "info": 0,
+    "warning": 0,
+  },
+  "tokenCounts": {
+    "colors": 0,
+    "components": 0,
+    "elevation": 0,
+    "layout": 0,
+    "radii": 0,
+    "spacing": 0,
+    "surface": 0,
+    "typography": 0,
+  },
+  "tokenSamples": {},
+}
+`;

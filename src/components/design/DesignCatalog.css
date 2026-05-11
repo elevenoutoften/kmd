@@ -1,0 +1,741 @@
+/* ===================================================================
+   Nyx Design Showcase — Design Mode catalog styles
+   Scoped under .nyx-showcase to avoid leaking into kmd chrome.
+   Uses its own CSS custom properties for theme tokens, separate from
+   kmd's own --color-* tokens.
+   =================================================================== */
+
+.nyx-showcase {
+  --nyx-bg: #000000;
+  --nyx-surface: #1d1d1f;
+  --nyx-accent: #38bdf8;
+  --nyx-accent-hover: #0ea5e9;
+  --nyx-accent-bg: rgba(14,165,233,0.15);
+  --nyx-positive: #22c55e;
+  --nyx-positive-bg: rgba(34,197,94,0.1);
+  --nyx-warning: #facc15;
+  --nyx-warning-bg: rgba(234,179,8,0.1);
+  --nyx-error: #f87171;
+  --nyx-text-head: #ffffff;
+  --nyx-text-body: rgba(255,255,255,0.85);
+  --nyx-text-muted: rgba(255,255,255,0.5);
+  --nyx-text-dim: rgba(255,255,255,0.4);
+  --nyx-sep: rgba(255,255,255,0.06);
+  --nyx-surface-elevated: rgba(255,255,255,0.05);
+  --nyx-neutral-bg: rgba(255,255,255,0.1);
+  --nyx-neutral-text: rgba(255,255,255,0.6);
+  --nyx-tag-neutral-bg: rgba(255,255,255,0.08);
+  --nyx-callout-bg: rgba(14,165,233,0.08);
+  --nyx-callout-text: rgba(255,255,255,0.8);
+  --nyx-btn-primary-text: #000;
+  --nyx-btn-secondary-hover: rgba(255,255,255,0.08);
+  --nyx-mobile-row-text: rgba(255,255,255,0.6);
+  --nyx-card-highlight-border: rgba(14,165,233,0.2);
+  --nyx-radius-card: 20px;
+  --nyx-radius-table: 16px;
+  --nyx-radius-btn: 10px;
+  --nyx-radius-badge: 9999px;
+  --nyx-radius-tag: 6px;
+  --nyx-radius-input: 8px;
+  --nyx-card-padding: 28px;
+  --nyx-input-bg: rgba(255,255,255,0.05);
+  --nyx-input-border: rgba(255,255,255,0.1);
+  --nyx-input-focus-ring: rgba(56,189,248,0.4);
+  --nyx-input-label: rgba(255,255,255,0.7);
+  --nyx-input-helper: rgba(255,255,255,0.45);
+  --nyx-input-placeholder: rgba(255,255,255,0.3);
+  --nyx-input-height: 36px;
+  --nyx-input-padding: 8px 12px;
+  --nyx-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --nyx-font-display: var(--nyx-font-family);
+  --nyx-font-heading: var(--nyx-font-family);
+  --nyx-font-subheading: var(--nyx-font-family);
+  --nyx-font-body: var(--nyx-font-family);
+  --nyx-font-label: var(--nyx-font-family);
+  --nyx-font-code: "SF Mono", "Cascadia Code", Consolas, monospace;
+  --nyx-display-size: 52px;
+  --nyx-display-weight: 600;
+  --nyx-display-line: 1.07;
+  --nyx-display-track: -0.03em;
+  --nyx-heading-size: 32px;
+  --nyx-heading-weight: 600;
+  --nyx-heading-line: 1.2;
+  --nyx-heading-track: -0.02em;
+  --nyx-subheading-size: 20px;
+  --nyx-subheading-weight: 600;
+  --nyx-subheading-line: 1.3;
+  --nyx-subheading-track: 0em;
+  --nyx-body-size: 15px;
+  --nyx-body-weight: 400;
+  --nyx-body-line: 1.47;
+  --nyx-body-track: 0em;
+  --nyx-label-size: 12px;
+  --nyx-label-weight: 600;
+  --nyx-label-line: 1.2;
+  --nyx-label-track: 0.06em;
+  --nyx-code-size: 14px;
+  --nyx-code-weight: 400;
+  --nyx-code-line: 1.5;
+  --nyx-code-track: 0em;
+
+  font-family: var(--nyx-font-body);
+  background: var(--nyx-bg);
+  color: var(--nyx-text-body);
+  line-height: var(--nyx-body-line);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  letter-spacing: var(--nyx-body-track);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+
+[data-theme="light"] .nyx-showcase {
+  --nyx-bg: #f5f5f7;
+  --nyx-surface: #ffffff;
+  --nyx-accent: #0284c7;
+  --nyx-accent-hover: #0369a1;
+  --nyx-accent-bg: rgba(2,132,199,0.12);
+  --nyx-positive: #16a34a;
+  --nyx-positive-bg: rgba(22,163,74,0.12);
+  --nyx-warning: #ca8a04;
+  --nyx-warning-bg: rgba(202,138,4,0.1);
+  --nyx-error: #dc2626;
+  --nyx-text-head: #111827;
+  --nyx-text-body: rgba(0,0,0,0.75);
+  --nyx-text-muted: rgba(0,0,0,0.5);
+  --nyx-text-dim: rgba(0,0,0,0.38);
+  --nyx-sep: rgba(0,0,0,0.08);
+  --nyx-surface-elevated: rgba(0,0,0,0.04);
+  --nyx-neutral-bg: rgba(0,0,0,0.08);
+  --nyx-neutral-text: rgba(0,0,0,0.6);
+  --nyx-tag-neutral-bg: rgba(0,0,0,0.06);
+  --nyx-callout-bg: rgba(2,132,199,0.08);
+  --nyx-callout-text: rgba(0,0,0,0.7);
+  --nyx-btn-primary-text: #fff;
+  --nyx-btn-secondary-hover: rgba(0,0,0,0.06);
+  --nyx-mobile-row-text: rgba(0,0,0,0.6);
+  --nyx-card-highlight-border: rgba(2,132,199,0.2);
+  --nyx-input-label: rgba(0,0,0,0.65);
+  --nyx-input-helper: rgba(0,0,0,0.45);
+  --nyx-input-placeholder: rgba(0,0,0,0.35);
+}
+
+.nyx-showcase *,
+.nyx-showcase *::before,
+.nyx-showcase *::after {
+  box-sizing: border-box;
+}
+
+/* ---- Container ---- */
+
+.nyx-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---- Hero ---- */
+
+.nyx-hero {
+  text-align: center;
+  padding: 100px 20px 64px;
+}
+
+.nyx-hero h1 {
+  font-family: var(--nyx-font-display);
+  font-size: clamp(38px, 6vw, var(--nyx-display-size));
+  font-weight: var(--nyx-display-weight);
+  color: var(--nyx-text-head);
+  letter-spacing: var(--nyx-display-track);
+  line-height: var(--nyx-display-line);
+  max-width: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.nyx-hero .nyx-subtitle {
+  font-family: var(--nyx-font-subheading);
+  font-size: var(--nyx-subheading-size);
+  color: var(--nyx-text-muted);
+  margin-top: 16px;
+  font-weight: var(--nyx-subheading-weight);
+  line-height: var(--nyx-subheading-line);
+  letter-spacing: var(--nyx-subheading-track);
+}
+
+.nyx-hero .nyx-meta {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  margin-top: 12px;
+  letter-spacing: var(--nyx-label-track);
+  text-transform: uppercase;
+}
+
+/* ---- Section ---- */
+
+.nyx-section {
+  margin-bottom: 64px;
+}
+
+.nyx-section-label {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+  margin-bottom: 20px;
+}
+
+.nyx-section h2 {
+  font-family: var(--nyx-font-heading);
+  font-size: var(--nyx-heading-size);
+  font-weight: var(--nyx-heading-weight);
+  line-height: var(--nyx-heading-line);
+  color: var(--nyx-text-head);
+  letter-spacing: var(--nyx-heading-track);
+  margin: 0 0 12px;
+}
+
+.nyx-section-desc {
+  color: var(--nyx-text-muted);
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+
+/* ---- Insight Callout ---- */
+
+.nyx-callout {
+  background: var(--nyx-callout-bg);
+  border-left: 3px solid var(--nyx-accent);
+  border-radius: 0;
+  padding: 20px 24px;
+  margin-bottom: 40px;
+}
+
+.nyx-callout p {
+  color: var(--nyx-callout-text);
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  margin: 0;
+}
+
+.nyx-callout strong {
+  color: var(--nyx-accent);
+  font-weight: 600;
+}
+
+/* ---- Cards ---- */
+
+.nyx-card {
+  background: var(--nyx-surface);
+  border-radius: var(--nyx-radius-card);
+  padding: var(--nyx-card-padding, 28px);
+}
+
+.nyx-card.highlight {
+  border: 1px solid var(--nyx-card-highlight-border);
+}
+
+.nyx-card h3 {
+  font-family: var(--nyx-font-subheading);
+  font-size: var(--nyx-subheading-size);
+  font-weight: var(--nyx-subheading-weight);
+  line-height: var(--nyx-subheading-line);
+  letter-spacing: var(--nyx-subheading-track);
+  color: var(--nyx-text-head);
+  margin: 0 0 10px;
+}
+
+.nyx-card p {
+  color: var(--nyx-text-muted);
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  margin: 0;
+}
+
+.nyx-card .nyx-card-meta {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  margin-top: 16px;
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+}
+
+/* ---- Grid layouts ---- */
+
+.nyx-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.nyx-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ---- Stat cards ---- */
+
+.nyx-stat-card {
+  background: var(--nyx-surface);
+  border-radius: var(--nyx-radius-card);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nyx-stat-label {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+}
+
+.nyx-stat-value {
+  font-family: var(--nyx-font-heading);
+  font-size: var(--nyx-heading-size);
+  font-weight: var(--nyx-heading-weight);
+  line-height: var(--nyx-heading-line);
+  color: var(--nyx-text-head);
+  letter-spacing: var(--nyx-heading-track);
+}
+
+.nyx-stat-delta {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  letter-spacing: var(--nyx-label-track);
+}
+
+.nyx-stat-delta.positive { color: var(--nyx-positive); }
+.nyx-stat-delta.negative { color: var(--nyx-error); }
+
+/* ---- Badges & Tags ---- */
+
+.nyx-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: var(--nyx-radius-badge);
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  letter-spacing: var(--nyx-label-track);
+  min-height: 22px;
+  white-space: nowrap;
+}
+
+.nyx-badge-accent { background: var(--nyx-accent-bg); color: var(--nyx-accent); }
+.nyx-badge-neutral { background: var(--nyx-neutral-bg); color: var(--nyx-neutral-text); }
+.nyx-badge-positive { background: var(--nyx-positive-bg); color: var(--nyx-positive); }
+.nyx-badge-warning { background: var(--nyx-warning-bg); color: var(--nyx-warning); }
+
+.nyx-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--nyx-radius-tag);
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  letter-spacing: var(--nyx-label-track);
+  min-height: 20px;
+  white-space: nowrap;
+}
+
+.nyx-tag-accent { background: var(--nyx-accent-bg); color: var(--nyx-accent); }
+.nyx-tag-neutral { background: var(--nyx-tag-neutral-bg); color: var(--nyx-text-muted); }
+
+/* ---- Buttons ---- */
+
+.nyx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--nyx-radius-btn);
+  font-size: max(var(--nyx-label-size), 13px);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  letter-spacing: var(--nyx-label-track);
+  min-width: 96px;
+  min-height: 36px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  font-family: var(--nyx-font-label);
+  white-space: nowrap;
+}
+
+.nyx-btn-primary {
+  background: var(--nyx-accent);
+  color: var(--nyx-btn-primary-text);
+}
+
+.nyx-btn-primary:hover { background: var(--nyx-accent-hover); }
+
+.nyx-btn-secondary {
+  background: var(--nyx-surface);
+  color: var(--nyx-text-head);
+  border: 1px solid var(--nyx-sep);
+}
+
+.nyx-btn-secondary:hover { background: var(--nyx-btn-secondary-hover); }
+
+.nyx-btn-ghost {
+  background: transparent;
+  color: var(--nyx-accent);
+}
+
+.nyx-btn-ghost:hover { background: var(--nyx-accent-bg); }
+
+/* ---- Inputs ---- */
+
+.nyx-input {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+  height: var(--nyx-input-height, 36px);
+  padding: var(--nyx-input-padding, 8px 12px);
+  background: var(--nyx-input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--nyx-input-border, rgba(255,255,255,0.1));
+  border-radius: var(--nyx-radius-input, 8px);
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  color: var(--nyx-text-body);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nyx-input:focus {
+  border-color: var(--nyx-accent);
+  box-shadow: 0 0 0 2px var(--nyx-input-focus-ring, rgba(56,189,248,0.4));
+}
+
+.nyx-input::placeholder {
+  color: var(--nyx-text-dim);
+}
+
+/* ---- Input field ---- */
+
+.nyx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nyx-input-label {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  letter-spacing: var(--nyx-label-track);
+  color: var(--nyx-input-label, var(--nyx-text-head));
+  text-transform: uppercase;
+}
+
+.nyx-input-control {
+  width: 100%;
+  max-width: 360px;
+  height: var(--nyx-input-height, 36px);
+  padding: var(--nyx-input-padding, 8px 12px);
+  background: var(--nyx-input-bg, rgba(255,255,255,0.05));
+  border: 1px solid var(--nyx-input-border, rgba(255,255,255,0.1));
+  border-radius: var(--nyx-radius-input, 8px);
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  color: var(--nyx-text-body);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nyx-input-control:focus-visible {
+  border-color: var(--nyx-accent);
+  box-shadow: 0 0 0 2px var(--nyx-input-focus-ring, rgba(56,189,248,0.4));
+}
+
+.nyx-input-control::placeholder {
+  color: var(--nyx-input-placeholder, var(--nyx-text-dim));
+}
+
+.nyx-input-helper {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-input-helper, var(--nyx-text-dim));
+  letter-spacing: var(--nyx-label-track);
+}
+
+/* ---- Table ---- */
+
+.nyx-table-wrap {
+  background: var(--nyx-surface);
+  border-radius: var(--nyx-radius-table);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.nyx-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+}
+
+.nyx-table-wrap thead {
+  background: var(--nyx-surface-elevated);
+}
+
+.nyx-table-wrap th {
+  padding: 14px 20px;
+  text-align: left;
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+}
+
+.nyx-table-wrap td {
+  padding: 16px 20px;
+  border-top: 1px solid var(--nyx-sep);
+  color: var(--nyx-text-body);
+}
+
+.nyx-table-wrap td.nyx-col-name {
+  color: var(--nyx-text-head);
+  font-weight: 600;
+}
+
+.nyx-table-wrap td.nyx-col-score {
+  color: var(--nyx-accent);
+  font-weight: 600;
+}
+
+/* ---- Mobile cards ---- */
+
+.nyx-mobile-cards { display: none; }
+
+.nyx-m-card {
+  background: var(--nyx-surface);
+  border-radius: var(--nyx-radius-table);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.nyx-m-card .nyx-m-name {
+  color: var(--nyx-text-head);
+  font-family: var(--nyx-font-subheading);
+  font-weight: var(--nyx-subheading-weight);
+  font-size: var(--nyx-subheading-size);
+  line-height: var(--nyx-subheading-line);
+  letter-spacing: var(--nyx-subheading-track);
+  margin-bottom: 12px;
+}
+
+.nyx-m-card .nyx-m-score {
+  color: var(--nyx-accent);
+  font-family: var(--nyx-font-heading);
+  font-weight: var(--nyx-heading-weight);
+  font-size: var(--nyx-heading-size);
+  line-height: var(--nyx-heading-line);
+  letter-spacing: var(--nyx-heading-track);
+  margin-bottom: 12px;
+}
+
+.nyx-m-card .nyx-m-rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nyx-m-card .nyx-m-row label {
+  display: block;
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+  margin-bottom: 4px;
+}
+
+.nyx-m-card .nyx-m-row span {
+  font-family: var(--nyx-font-body);
+  font-size: var(--nyx-body-size);
+  font-weight: var(--nyx-body-weight);
+  line-height: var(--nyx-body-line);
+  letter-spacing: var(--nyx-body-track);
+  color: var(--nyx-mobile-row-text);
+}
+
+/* ---- Color swatch grid ---- */
+
+.nyx-swatch-card {
+  background: var(--nyx-surface);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nyx-swatch {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--nyx-sep);
+}
+
+.nyx-swatch-name {
+  font-family: var(--nyx-font-subheading);
+  font-size: var(--nyx-subheading-size);
+  font-weight: var(--nyx-subheading-weight);
+  line-height: var(--nyx-subheading-line);
+  letter-spacing: var(--nyx-subheading-track);
+  color: var(--nyx-text-head);
+}
+
+.nyx-swatch-value {
+  font-size: var(--nyx-code-size);
+  color: var(--nyx-text-muted);
+  font-family: var(--nyx-font-code);
+  font-weight: var(--nyx-code-weight);
+  line-height: var(--nyx-code-line);
+  letter-spacing: var(--nyx-code-track);
+}
+
+.nyx-swatch-role {
+  font-family: var(--nyx-font-label);
+  font-size: var(--nyx-label-size);
+  font-weight: var(--nyx-label-weight);
+  line-height: var(--nyx-label-line);
+  color: var(--nyx-text-dim);
+  text-transform: uppercase;
+  letter-spacing: var(--nyx-label-track);
+}
+
+/* ---- Separator ---- */
+
+.nyx-sep {
+  border: none;
+  border-top: 1px solid var(--nyx-sep);
+  margin: 48px 0;
+}
+
+/* ---- Typography specimens ---- */
+
+.nyx-typo-specimens {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.nyx-typo-row {
+  margin: 0;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+  .nyx-grid-3 { grid-template-columns: 1fr; }
+  .nyx-grid-2 { grid-template-columns: 1fr; }
+  .nyx-table-wrap { display: none; }
+  .nyx-mobile-cards { display: block; }
+  .nyx-hero h1 { font-size: min(var(--nyx-display-size), 36px); }
+  .nyx-hero { padding: 60px 16px 40px; }
+  .nyx-section h2 { font-size: min(var(--nyx-heading-size), 26px); }
+}
+
+@media (max-width: 640px) {
+  .nyx-m-card .nyx-m-rows { grid-template-columns: 1fr; }
+  .nyx-container { padding: 0 16px; }
+}
+
+/* ---- Color swatch in table rows ---- */
+
+.nyx-table-swatch {
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--nyx-sep);
+  vertical-align: middle;
+}
+
+/* ---- Design mode layout ---- */
+
+.design-mode-scroll {
+  --nyx-bg: #000000;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: block;
+  background-color: var(--nyx-bg);
+  width: 100%;
+}
+
+[data-theme="light"] .design-mode-scroll {
+  --nyx-bg: #f5f5f7;
+}
+
+.design-mode-content {
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ---- Page break safety ---- */
+
+.nyx-card,
+.nyx-stat-card,
+.nyx-m-card,
+.nyx-table-wrap,
+.nyx-swatch-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
