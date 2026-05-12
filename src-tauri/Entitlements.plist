@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList/1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Enable App Sandbox (required for App Store, good practice) -->
-    <key>com.apple.security.app-sandbox</key>
+    <!-- Apple Events: needed for NSOpenPanel and receiving file-open Apple Events.
+         Without this, TCC blocks inter-process communication. -->
+    <key>com.apple.security.automation.apple-events</key>
     <true/>
 
-    <!-- Allow reading files that the user selects via Open dialog
-         or that macOS delivers via file association (Finder double-click) -->
+    <!-- NOTE: com.apple.security.app-sandbox is intentionally NOT set here.
+         Sandbox is only enforceable with proper Apple Developer signing.
+         Without valid signing, macOS applies sandbox restrictions but ignores
+         user-selected read/write entitlements, breaking file access.
+         Enable sandbox only when setting up App Store distribution signing. -->
+
+    <!-- Allow reading files the user selects or opens via file association -->
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
 
-    <!-- Allow writing to files the user selects (needed for future save features) -->
+    <!-- Allow writing to files the user selects -->
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
 </dict>
