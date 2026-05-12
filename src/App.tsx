@@ -109,20 +109,14 @@ function AppInner() {
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
+    let cancelled = false;
     let unlisten: (() => void) | undefined;
 
-    (async () => {
-      try {
-        const { invoke } = await import("@tauri-apps/api/core");
-        const urls: string[] = await invoke("get_opened_urls");
-        console.log("[kmd:boot] get_opened_urls result:", urls);
-        if (urls.length > 0) {
-          void openDocument(urls[0]!);
-        }
-      } catch {
-        // Command not available
-      }
-
+    void (async () => {
+      // 1. Register the "opened" event listener FIRST, before any other async work.
+      //    On macOS cold start, RunEvent::Opened may fire after the webview loads
+      //    but before React has mounted. The listener must be in place before we
+      //    check get_opened_urls so we don't miss the event.
       try {
         const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
         const win = getCurrentWebviewWindow();
@@ -130,15 +124,60 @@ function AppInner() {
           const paths = event.payload;
           console.log("[kmd:boot] 'opened' event received:", paths);
           if (paths && paths.length > 0) {
-            void openDocument(paths[0]!);
+            void openDocument(paths[0]!).catch((err) => {
+              console.error("[kmd:boot] openDocument failed for opened event:", err);
+              toast(`Failed to open file: ${String(err)}`, { type: "error" });
+            });
           }
         });
-      } catch {
-        // opened event not available in this environment
+        console.log("[kmd:boot] 'opened' event listener registered");
+      } catch (err) {
+        console.log("[kmd:boot] 'opened' event listener failed:", String(err));
+      }
+
+      if (cancelled) return;
+
+      // 2. Check for URLs already stored in Rust state.
+      //    On macOS, RunEvent::Opened fires in .run() which starts AFTER .build().
+      //    On cold start, the Apple Event may not have been processed yet when
+      //    the frontend first mounts. Poll with a short delay to give the Rust
+      //    event loop time to deliver the file URL.
+      const { invoke } = await import("@tauri-apps/api/core");
+
+      const MAX_POLLS = 10;
+      const POLL_INTERVAL_MS = 100;
+
+      for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        if (cancelled) return;
+
+        try {
+          const urls: string[] = await invoke("get_opened_urls");
+          console.log(`[kmd:boot] get_opened_urls attempt ${attempt + 1}:`, urls);
+          if (urls.length > 0) {
+            void openDocument(urls[0]!).catch((err) => {
+              console.error("[kmd:boot] openDocument failed for opened URL:", err);
+              toast(`Failed to open file: ${String(err)}`, { type: "error" });
+            });
+            break;
+          }
+        } catch {
+          // Command not available
+          break;
+        }
+
+        // Wait before retrying — give macOS time to deliver the Apple Event
+        if (attempt < MAX_POLLS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        }
+      }
+
+      if (!cancelled) {
+        console.log("[kmd:boot] get_opened_urls polling complete");
       }
     })();
 
     return () => {
+      cancelled = true;
       unlisten?.();
     };
   }, [openDocument]);

@@ -44,6 +44,7 @@ export function useDocumentState() {
         setDocumentName(info.display_name);
       } catch (err) {
         console.error("Failed to open document:", err);
+        throw err; // Re-throw so callers (e.g. file-open handlers) can show user-facing errors
       }
     },
     []
