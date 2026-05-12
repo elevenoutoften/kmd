@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::Engine;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 const MAX_RECENT_FILES: usize = 50;
 
@@ -160,6 +160,34 @@ fn system_time_to_secs(time: SystemTime) -> u64 {
 // ---------------------------------------------------------------------------
 // Tauri commands
 // ---------------------------------------------------------------------------
+
+/// Show and focus the main window once the React app has mounted.
+#[tauri::command]
+pub fn show_main_window(app: AppHandle) -> Result<(), String> {
+    eprintln!("[kmd:boot] show_main_window called");
+
+    let window = app.get_webview_window("main").ok_or_else(|| {
+        let message = "main window not found".to_string();
+        eprintln!("[kmd:boot] show_main_window error: {message}");
+        message
+    })?;
+
+    window.show().map_err(|e| {
+        let message = format!("failed to show main window: {e}");
+        eprintln!("[kmd:boot] show_main_window error: {message}");
+        message
+    })?;
+    eprintln!("[kmd:boot] main window shown");
+
+    window.set_focus().map_err(|e| {
+        let message = format!("failed to focus main window: {e}");
+        eprintln!("[kmd:boot] show_main_window error: {message}");
+        message
+    })?;
+    eprintln!("[kmd:boot] main window focused");
+
+    Ok(())
+}
 
 /// Open a Markdown file, read its contents, and return document metadata.
 /// Also records the file in the recent-files list.

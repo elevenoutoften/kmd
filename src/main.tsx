@@ -1,8 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getInitialTheme, applyTheme } from "./theme";
 import { App } from "./App";
+
+console.log("[kmd:boot] main.tsx module loading");
 
 applyTheme(getInitialTheme());
 
@@ -15,8 +16,4 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-requestAnimationFrame(() => {
-  requestAnimationFrame(() => {
-    void getCurrentWebviewWindow().show();
-  });
-});
+console.log("[kmd:boot] React root created and render called");

@@ -39,6 +39,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::show_main_window,
             commands::open_document,
             commands::resolve_asset,
             commands::list_recent_files,

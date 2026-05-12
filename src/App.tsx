@@ -54,6 +54,31 @@ function AppInner() {
   const hasDocument = content.length > 0;
 
   useEffect(() => {
+    if (!isTauriRuntime()) return;
+
+    console.log("[kmd:boot] App mounted, invoking show_main_window");
+    void (async () => {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("show_main_window");
+        console.log("[kmd:boot] show_main_window invoke success");
+        console.log("[kmd:boot] show_main_window success, window should be visible");
+      } catch (err) {
+        console.log(
+          `[kmd:boot] show_main_window failed: ${String(err)}, falling back to JS show()`
+        );
+        try {
+          const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+          await getCurrentWebviewWindow().show();
+          console.log("[kmd:boot] JS fallback show() called");
+        } catch (fallbackErr) {
+          console.log(`[kmd:boot] JS fallback show() failed: ${String(fallbackErr)}`);
+        }
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!content) {
       setShowDesignTab(false);
       setTab("reader");
