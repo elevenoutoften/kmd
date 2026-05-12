@@ -31,7 +31,10 @@ const cropFiles = [
   "StoreLogo.png",
 ];
 
-const fullFiles = ["icon.icns"];
+// Full-source files: only iOS and Android assets need the solid-square source.
+// icon.icns is intentionally NOT here — it must use the RGBA crop source so
+// macOS gets transparent margins for the system rounded-rect mask.
+const fullFiles = [];
 
 function runTauriIcon(inputPath, outputDir) {
   const result = spawnSync(process.execPath, [tauriCliPath, "icon", inputPath, "-o", outputDir], {
@@ -59,6 +62,12 @@ try {
   for (const file of cropFiles) {
     cpSync(join(cropOutputDir, file), join(targetDir, file), { force: true });
   }
+
+  // icon.icns: use the IconCrop (RGBA) output so macOS gets transparent
+  // margins for the system rounded-rect mask.  The previous IconFull source
+  // was a solid RGB square which rendered as an uncropped-square icon on
+  // Intel Macs.
+  cpSync(join(cropOutputDir, "icon.icns"), join(targetDir, "icon.icns"), { force: true });
 
   buildWindowsIco(cropOutputDir, join(targetDir, "icon.ico"));
 
