@@ -1,6 +1,6 @@
 {
   "name": "kmd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Kawaii MD reader: a local-first desktop Markdown reader with first-class DESIGN.md support.",
   "license": "MIT",
   "author": "kmd contributors",

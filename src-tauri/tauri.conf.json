@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicerdicer/tauri-v2-schema/main/tauri.schema.json",
   "productName": "kmd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "io.github.elevenoutoften.kmd",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -40,19 +40,25 @@
     },
     "fileAssociations": [
       {
-        "ext": ["md"],
+        "ext": [
+          "md"
+        ],
         "mimeType": "text/markdown",
         "description": "Markdown Document",
         "role": "Editor"
       },
       {
-        "ext": ["markdown"],
+        "ext": [
+          "markdown"
+        ],
         "mimeType": "text/markdown",
         "description": "Markdown Document",
         "role": "Editor"
       },
       {
-        "ext": ["design.md"],
+        "ext": [
+          "design.md"
+        ],
         "mimeType": "text/markdown",
         "description": "kmd design document",
         "role": "Editor"
