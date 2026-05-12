@@ -88,16 +88,28 @@ function AppInner() {
 
     (async () => {
       try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        const urls: string[] = await invoke("get_opened_urls");
+        console.log("[kmd:boot] get_opened_urls result:", urls);
+        if (urls.length > 0) {
+          void openDocument(urls[0]!);
+        }
+      } catch {
+        // Command not available
+      }
+
+      try {
         const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
         const win = getCurrentWebviewWindow();
-        unlisten = await win.listen<string[]>("tauri://file-open", (event) => {
+        unlisten = await win.listen<string[]>("opened", (event) => {
           const paths = event.payload;
+          console.log("[kmd:boot] 'opened' event received:", paths);
           if (paths && paths.length > 0) {
             void openDocument(paths[0]!);
           }
         });
       } catch {
-        // File-open events not available in this environment
+        // opened event not available in this environment
       }
     })();
 
