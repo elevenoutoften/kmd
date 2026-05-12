@@ -11,6 +11,7 @@
         var theme = saved === "light" || saved === "dark" ? saved : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         document.documentElement.setAttribute("data-theme", theme);
         document.documentElement.style.backgroundColor = theme === "dark" ? "#222428" : "#ffffff";
+        console.log("[kmd:boot] theme applied: " + theme);
       })();
     </script>
   </head>

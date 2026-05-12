@@ -16,44 +16,27 @@ async function invokeOpenDocument(path: string): Promise<DocumentInfo> {
   return invoke<DocumentInfo>("open_document", { path });
 }
 
-function contentKey(content: string): string {
-  let hash = 0;
-  for (let i = 0; i < Math.min(content.length, 256); i++) {
-    hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0;
-  }
-  return `${content.length}-${hash}`;
-}
-
 export function useDocumentState() {
-  const [content, setContent] = useState<string>(
-    () => window.__TAURI_OPEN_FILE?.content ?? ""
-  );
-  const [filePath, setFilePath] = useState<string | null>(
-    () => window.__TAURI_OPEN_FILE?.path ?? null
-  );
-  const [documentName, setDocumentName] = useState<string | null>(() => {
-    const path = window.__TAURI_OPEN_FILE?.path;
-    if (!path) return null;
-    const sep = path.includes("\\") ? "\\" : "/";
-    const parts = path.split(sep);
-    return parts[parts.length - 1] ?? null;
-  });
+  const [content, setContent] = useState<string>("");
+  const [filePath, setFilePath] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState<string | null>(null);
 
-  const lastFileKey = useRef(contentKey(content));
+  const lastOpenedPath = useRef<string | null>(null);
 
   const openDocument = useCallback(
     async (path: string) => {
       try {
+        if (path === lastOpenedPath.current) return;
+
         const info = await invokeOpenDocument(path);
-        const key = contentKey(info.content);
-        if (key === lastFileKey.current) return;
-        lastFileKey.current = key;
+        lastOpenedPath.current = info.path_label;
 
         setContent(info.content);
         setFilePath(info.path_label);
         setDocumentName(info.display_name);
       } catch (err) {
         console.error("Failed to open document:", err);
+        throw err; // Re-throw so callers (e.g. file-open handlers) can show user-facing errors
       }
     },
     []

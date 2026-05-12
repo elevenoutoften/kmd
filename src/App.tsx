@@ -42,19 +42,44 @@ function AppInner() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const { content, filePath, documentName, openDocument } = useDocumentState();
   const [tab, setTab] = useState<"reader" | "design">(() =>
-    content ? getDesignDetection(content, documentName ?? undefined).preferredTab : "reader"
+    filePath !== null ? getDesignDetection(content, documentName ?? undefined).preferredTab : "reader"
   );
   const [showDesignTab, setShowDesignTab] = useState(() =>
-    content ? getDesignDetection(content, documentName ?? undefined).hasDesignData : false
+    filePath !== null ? getDesignDetection(content, documentName ?? undefined).hasDesignData : false
   );
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
   const [isExportingDesign, setIsExportingDesign] = useState(false);
 
-  const hasDocument = content.length > 0;
+  const hasDocument = filePath !== null;
 
   useEffect(() => {
-    if (!content) {
+    if (!isTauriRuntime()) return;
+
+    console.log("[kmd:boot] App mounted, invoking show_main_window");
+    void (async () => {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("show_main_window");
+        console.log("[kmd:boot] show_main_window invoke success");
+        console.log("[kmd:boot] show_main_window success, window should be visible");
+      } catch (err) {
+        console.log(
+          `[kmd:boot] show_main_window failed: ${String(err)}, falling back to JS show()`
+        );
+        try {
+          const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+          await getCurrentWebviewWindow().show();
+          console.log("[kmd:boot] JS fallback show() called");
+        } catch (fallbackErr) {
+          console.log(`[kmd:boot] JS fallback show() failed: ${String(fallbackErr)}`);
+        }
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (filePath === null) {
       setShowDesignTab(false);
       setTab("reader");
       return;
@@ -66,7 +91,7 @@ function AppInner() {
     } else {
       setTab(preferredTab);
     }
-  }, [content, documentName]);
+  }, [content, documentName, filePath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,24 +109,75 @@ function AppInner() {
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
+    let cancelled = false;
     let unlisten: (() => void) | undefined;
 
-    (async () => {
+    void (async () => {
+      // 1. Register the "opened" event listener FIRST, before any other async work.
+      //    On macOS cold start, RunEvent::Opened may fire after the webview loads
+      //    but before React has mounted. The listener must be in place before we
+      //    check get_opened_urls so we don't miss the event.
       try {
         const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
         const win = getCurrentWebviewWindow();
-        unlisten = await win.listen<string[]>("tauri://file-open", (event) => {
+        unlisten = await win.listen<string[]>("opened", (event) => {
           const paths = event.payload;
+          console.log("[kmd:file-open] 'opened' event received:", paths);
           if (paths && paths.length > 0) {
-            void openDocument(paths[0]!);
+            void openDocument(paths[0]!).catch((err) => {
+              console.error("[kmd:boot] openDocument failed for opened event:", err);
+              toast(`Failed to open file: ${String(err)}`, { type: "error" });
+            });
           }
         });
-      } catch {
-        // File-open events not available in this environment
+        console.log("[kmd:boot] 'opened' event listener registered");
+      } catch (err) {
+        console.log("[kmd:boot] 'opened' event listener failed:", String(err));
+      }
+
+      if (cancelled) return;
+
+      // 2. Check for URLs already stored in Rust state.
+      //    On macOS, RunEvent::Opened fires in .run() which starts AFTER .build().
+      //    On cold start, the Apple Event may not have been processed yet when
+      //    the frontend first mounts. Poll with a short delay to give the Rust
+      //    event loop time to deliver the file URL.
+      const { invoke } = await import("@tauri-apps/api/core");
+
+      const MAX_POLLS = 10;
+      const POLL_INTERVAL_MS = 100;
+
+      for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        if (cancelled) return;
+
+        try {
+          const urls: string[] = await invoke("get_opened_urls");
+          console.log(`[kmd:file-open] get_opened_urls attempt ${attempt + 1}:`, urls);
+          if (urls.length > 0) {
+            void openDocument(urls[0]!).catch((err) => {
+              console.error("[kmd:boot] openDocument failed for opened URL:", err);
+              toast(`Failed to open file: ${String(err)}`, { type: "error" });
+            });
+            break;
+          }
+        } catch {
+          // Command not available
+          break;
+        }
+
+        // Wait before retrying — give macOS time to deliver the Apple Event
+        if (attempt < MAX_POLLS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        }
+      }
+
+      if (!cancelled) {
+        console.log("[kmd:boot] get_opened_urls polling complete");
       }
     })();
 
     return () => {
+      cancelled = true;
       unlisten?.();
     };
   }, [openDocument]);
