@@ -25,21 +25,11 @@ function contentKey(content: string): string {
 }
 
 export function useDocumentState() {
-  const [content, setContent] = useState<string>(
-    () => window.__TAURI_OPEN_FILE?.content ?? ""
-  );
-  const [filePath, setFilePath] = useState<string | null>(
-    () => window.__TAURI_OPEN_FILE?.path ?? null
-  );
-  const [documentName, setDocumentName] = useState<string | null>(() => {
-    const path = window.__TAURI_OPEN_FILE?.path;
-    if (!path) return null;
-    const sep = path.includes("\\") ? "\\" : "/";
-    const parts = path.split(sep);
-    return parts[parts.length - 1] ?? null;
-  });
+  const [content, setContent] = useState<string>("");
+  const [filePath, setFilePath] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState<string | null>(null);
 
-  const lastFileKey = useRef(contentKey(content));
+  const lastFileKey = useRef(contentKey(""));
 
   const openDocument = useCallback(
     async (path: string) => {

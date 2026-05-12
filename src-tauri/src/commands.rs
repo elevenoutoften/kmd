@@ -42,6 +42,8 @@ pub struct AssetData {
 // Shared state
 // ---------------------------------------------------------------------------
 
+pub struct OpenedUrls(pub Mutex<Vec<String>>);
+
 pub struct AppState {
     recent_files: Mutex<Vec<RecentFileEntry>>,
     data_dir: PathBuf,
@@ -187,6 +189,11 @@ pub fn show_main_window(app: AppHandle) -> Result<(), String> {
     eprintln!("[kmd:boot] main window focused");
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_opened_urls(app: tauri::AppHandle) -> Vec<String> {
+    app.state::<OpenedUrls>().0.lock().unwrap().clone()
 }
 
 /// Open a Markdown file, read its contents, and return document metadata.
