@@ -28,7 +28,10 @@ pub fn run() {
                     .lock()
                     .unwrap()
                     .push(path.clone());
-                let _ = app.emit("opened", vec![path]);
+                let _ = app.emit("opened", vec![path.clone()]);
+                if let Some(webview) = app.get_webview_window("main") {
+                    let _ = webview.emit("opened", vec![path]);
+                }
             }
 
             Ok(())
@@ -55,13 +58,20 @@ pub fn run() {
                 eprintln!("[kmd:file-open] RunEvent::Opened URLs: {:?}", urls);
                 eprintln!("[kmd:file-open] Resolved paths: {:?}", paths);
                 if !paths.is_empty() {
-                    eprintln!("[kmd:boot] RunEvent::Opened: {:?}", paths);
+                    eprintln!("[kmd:file-open] RunEvent::Opened paths: {:?}", paths);
                     app.state::<commands::OpenedUrls>()
                         .0
                         .lock()
                         .unwrap()
                         .extend(paths.clone());
-                    let _ = app.emit("opened", paths);
+                    // Emit globally AND to the main webview specifically.
+                    // app.emit() goes to global listeners (listen() from @tauri-apps/api/event).
+                    // emit_to("main") goes to per-webview listeners (win.listen()).
+                    // Use both so any frontend listener style works.
+                    let _ = app.emit("opened", paths.clone());
+                    if let Some(webview) = app.get_webview_window("main") {
+                        let _ = webview.emit("opened", paths);
+                    }
                 }
             }
         });

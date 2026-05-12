@@ -118,9 +118,11 @@ function AppInner() {
       //    but before React has mounted. The listener must be in place before we
       //    check get_opened_urls so we don't miss the event.
       try {
-        const { getCurrentWebviewWindow } = await import("@tauri-apps/api/webviewWindow");
-        const win = getCurrentWebviewWindow();
-        unlisten = await win.listen<string[]>("opened", (event) => {
+        // Use the GLOBAL listen() from @tauri-apps/api/event, NOT
+        // getCurrentWebviewWindow().listen(). App.emit() sends global events
+        // that are only received by the global listener, not by per-webview ones.
+        const { listen } = await import("@tauri-apps/api/event");
+        unlisten = await listen<string[]>("opened", (event) => {
           const paths = event.payload;
           console.log("[kmd:file-open] 'opened' event received:", paths);
           if (paths && paths.length > 0) {
@@ -130,7 +132,7 @@ function AppInner() {
             });
           }
         });
-        console.log("[kmd:boot] 'opened' event listener registered");
+        console.log("[kmd:boot] 'opened' event listener registered (global)");
       } catch (err) {
         console.log("[kmd:boot] 'opened' event listener failed:", String(err));
       }
