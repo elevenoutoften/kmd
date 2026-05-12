@@ -161,6 +161,16 @@ export function Reader({ content, filePath }: ReaderProps) {
     );
   }
 
+  if (content === "" && filePath !== null) {
+    return (
+      <DocumentShell outline={outline} onAnchorClick={scrollToFragment}>
+        <div ref={bodyRef} className="mdr-body">
+          <p className="mdr-empty">This file is empty.</p>
+        </div>
+      </DocumentShell>
+    );
+  }
+
   return (
     <DocumentShell outline={outline} onAnchorClick={scrollToFragment}>
       <div

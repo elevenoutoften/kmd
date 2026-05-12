@@ -203,6 +203,7 @@ pub fn open_document(
     path: String,
     state: State<'_, AppState>,
 ) -> Result<DocumentInfo, String> {
+    eprintln!("[kmd:file-open] open_document called with path: {:?}", path);
     let file_path = Path::new(&path);
 
     if !file_path.exists() {

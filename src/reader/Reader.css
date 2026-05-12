@@ -242,6 +242,14 @@
   color: var(--color-danger);
 }
 
+/* ---- Empty file state ---- */
+.mdr-empty {
+  color: var(--color-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: var(--space-xl) 0;
+}
+
 .mdr-error pre {
   background-color: var(--color-surface-muted);
   padding: var(--space-md);

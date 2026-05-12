@@ -22,7 +22,7 @@ pub fn run() {
             let args: Vec<String> = std::env::args().skip(1).collect();
             if let Some(first_file) = args.first() {
                 let path = first_file.clone();
-                eprintln!("[kmd:boot] CLI arg file: {:?}", path);
+                eprintln!("[kmd:file-open] CLI arg file: {:?}", path);
                 app.state::<commands::OpenedUrls>()
                     .0
                     .lock()
@@ -52,6 +52,8 @@ pub fn run() {
                     .filter_map(|u| u.to_file_path().ok())
                     .map(|p| p.to_string_lossy().into_owned())
                     .collect();
+                eprintln!("[kmd:file-open] RunEvent::Opened URLs: {:?}", urls);
+                eprintln!("[kmd:file-open] Resolved paths: {:?}", paths);
                 if !paths.is_empty() {
                     eprintln!("[kmd:boot] RunEvent::Opened: {:?}", paths);
                     app.state::<commands::OpenedUrls>()

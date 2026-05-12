@@ -42,16 +42,16 @@ function AppInner() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const { content, filePath, documentName, openDocument } = useDocumentState();
   const [tab, setTab] = useState<"reader" | "design">(() =>
-    content ? getDesignDetection(content, documentName ?? undefined).preferredTab : "reader"
+    filePath !== null ? getDesignDetection(content, documentName ?? undefined).preferredTab : "reader"
   );
   const [showDesignTab, setShowDesignTab] = useState(() =>
-    content ? getDesignDetection(content, documentName ?? undefined).hasDesignData : false
+    filePath !== null ? getDesignDetection(content, documentName ?? undefined).hasDesignData : false
   );
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
   const [isExportingDesign, setIsExportingDesign] = useState(false);
 
-  const hasDocument = content.length > 0;
+  const hasDocument = filePath !== null;
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
@@ -79,7 +79,7 @@ function AppInner() {
   }, []);
 
   useEffect(() => {
-    if (!content) {
+    if (filePath === null) {
       setShowDesignTab(false);
       setTab("reader");
       return;
@@ -91,7 +91,7 @@ function AppInner() {
     } else {
       setTab(preferredTab);
     }
-  }, [content, documentName]);
+  }, [content, documentName, filePath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +122,7 @@ function AppInner() {
         const win = getCurrentWebviewWindow();
         unlisten = await win.listen<string[]>("opened", (event) => {
           const paths = event.payload;
-          console.log("[kmd:boot] 'opened' event received:", paths);
+          console.log("[kmd:file-open] 'opened' event received:", paths);
           if (paths && paths.length > 0) {
             void openDocument(paths[0]!).catch((err) => {
               console.error("[kmd:boot] openDocument failed for opened event:", err);
@@ -152,7 +152,7 @@ function AppInner() {
 
         try {
           const urls: string[] = await invoke("get_opened_urls");
-          console.log(`[kmd:boot] get_opened_urls attempt ${attempt + 1}:`, urls);
+          console.log(`[kmd:file-open] get_opened_urls attempt ${attempt + 1}:`, urls);
           if (urls.length > 0) {
             void openDocument(urls[0]!).catch((err) => {
               console.error("[kmd:boot] openDocument failed for opened URL:", err);
