@@ -38,6 +38,12 @@ pub struct AssetData {
     pub bytes_base64: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ResolvedLocalPath {
+    pub absolute_path: String,
+    pub is_dir: bool,
+}
+
 // ---------------------------------------------------------------------------
 // Shared state
 // ---------------------------------------------------------------------------
@@ -304,6 +310,40 @@ pub fn resolve_asset(
     Ok(AssetData {
         mime_type,
         bytes_base64,
+    })
+}
+
+/// Resolve a relative link path under the document's base folder.
+/// Returns the absolute path and whether it's a directory.
+/// Rejects path-traversal attempts.
+#[tauri::command]
+pub fn resolve_local_path(
+    doc_path: String,
+    relative_path: String,
+) -> Result<ResolvedLocalPath, String> {
+    let doc = Path::new(&doc_path);
+
+    if !doc.is_file() {
+        return Err(format!("document does not exist: {doc_path}"));
+    }
+
+    let base_dir = doc
+        .parent()
+        .ok_or_else(|| "document path has no parent directory".to_string())?;
+
+    let resolved = base_dir.join(&relative_path);
+
+    let canonical = canonicalize_under_base(base_dir, &resolved)?;
+
+    let is_dir = canonical.is_dir();
+
+    if !canonical.is_file() && !is_dir {
+        return Err(format!("path not found: {relative_path}"));
+    }
+
+    Ok(ResolvedLocalPath {
+        absolute_path: canonical.to_string_lossy().into_owned(),
+        is_dir,
     })
 }
 

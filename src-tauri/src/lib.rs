@@ -38,6 +38,7 @@ pub fn run() {
             commands::get_opened_urls,
             commands::open_document,
             commands::resolve_asset,
+            commands::resolve_local_path,
             commands::list_recent_files,
             commands::add_recent_file,
             commands::export_html,

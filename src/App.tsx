@@ -349,7 +349,7 @@ function AppInner() {
         {hasDocument ? (
           tab === "reader" ? (
             <ErrorBoundary key={errorKey} onReset={() => setErrorKey((k) => k + 1)}>
-              <Reader content={content} filePath={filePath} />
+              <Reader content={content} filePath={filePath} onOpenDocument={openDocument} />
             </ErrorBoundary>
           ) : (
             <ErrorBoundary key={errorKey + 1000} onReset={() => setErrorKey((k) => k + 1)}>
