@@ -8,7 +8,9 @@ import { resolveRelativeImages } from "./resolveAssets";
 import { DocumentShell } from "./DocumentShell";
 import { findAnchorTarget, scrollContainerToTarget } from "./anchorNavigation";
 import { classifyRenderedLink, getFragmentIdFromHref, normalizeExternalHref } from "./linkPolicy";
+import { enhanceCodeBlocks, removeCodeBlockEnhancements } from "./codeBlockEnhancements";
 import { isTauriRuntime } from "@/utils/platform";
+import { useToast } from "@/hooks/useToast";
 import "./Reader.css";
 
 interface ReaderProps {
@@ -91,6 +93,9 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const prevContentRef = useRef(content);
   const pendingFragmentRef = useRef<string | null>(null);
+  const { toast } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
 
   useEffect(() => {
     if (prevContentRef.current !== content && prevContentRef.current) {
@@ -163,6 +168,28 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     if (!html || !bodyRef.current || !filePath) return;
     void resolveRelativeImages(bodyRef.current, filePath);
   }, [html, filePath]);
+
+  useEffect(() => {
+    if (!html || !bodyRef.current) return;
+    if (bodyRef.current.dataset.codeEnhanced === "true") return;
+    bodyRef.current.dataset.codeEnhanced = "true";
+    
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      if (bodyRef.current) {
+        enhanceCodeBlocks(bodyRef.current, (message) => {
+          toastRef.current(message, { type: "success" });
+        });
+      }
+    }, 0);
+    
+    return () => {
+      clearTimeout(timer);
+      if (bodyRef.current) {
+        removeCodeBlockEnhancements(bodyRef.current);
+      }
+    };
+  }, [html]);
 
   const scrollToFragment = useCallback((fragmentId: string | null) => {
     if (!fragmentId || !bodyRef.current) {

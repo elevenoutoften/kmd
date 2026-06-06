@@ -30,6 +30,8 @@ export const sanitizeSchema: Schema = {
     "kbd", "mark", "sub", "sup", "abbr", "details", "summary",
     // GitHub alerts: div wrappers with class
     "div",
+    // Copy button for code blocks
+    "button",
     // KaTeX MathML elements
     "math", "semantics", "mrow", "mi", "mo", "mn", "msup", "msubsup",
     "annotation", "mop", "mtext", "mfrac", "msqrt", "mroot", "mfenced",
@@ -51,6 +53,7 @@ export const sanitizeSchema: Schema = {
     span: [...(defaultAttributes.span ?? []), "className", "style"],
     pre: [...(defaultAttributes.pre ?? []), "className", "dataLanguage", "tabindex", "style"],
     code: [...(defaultAttributes.code ?? []), "className"],
+    button: ["className", "type", "ariaLabel"],
     // Preserve the default safe attributes, including clobber-protected id/name.
     "*": [...(defaultAttributes["*"] ?? []), "className"],
     // MathML elements need various attributes

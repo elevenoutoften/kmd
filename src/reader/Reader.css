@@ -94,6 +94,7 @@
   line-height: var(--line-height-code-md);
   margin-bottom: var(--space-md);
   tab-size: 2;
+  position: relative;
 }
 
 .mdr-body code {
@@ -111,6 +112,17 @@
   color: var(--color-tertiary);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.mdr-body p code:hover,
+.mdr-body li code:hover,
+.mdr-body td code:hover,
+.mdr-body h1 code:hover,
+.mdr-body h2 code:hover,
+.mdr-body h3 code:hover {
+  background-color: var(--color-surface);
 }
 
 .mdr-body pre code {
@@ -357,6 +369,71 @@
   padding: 0;
   color: inherit;
   font-size: inherit;
+}
+
+.mdr-body .shiki-code-block code span[style] {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.mdr-body .shiki-code-block code span[style]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .mdr-body .shiki-code-block code span[style]:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.code-copy-button {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  opacity: 0;
+  z-index: 10;
+}
+
+.mdr-body pre:hover .code-copy-button {
+  opacity: 1;
+}
+
+.code-copy-button:hover {
+  color: var(--color-on-surface);
+  border-color: var(--color-on-surface);
+}
+
+.code-copy-button:active {
+  transform: scale(0.95);
+}
+
+.code-copy-button svg {
+  display: block;
+}
+
+.code-copy-button:hover {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  border-color: var(--color-secondary);
+}
+
+.code-copy-button:active {
+  transform: scale(0.95);
+}
+
+.code-copy-button svg {
+  display: block;
 }
 
 /* Shiki dual-theme: show dark theme in dark mode, light in light mode */

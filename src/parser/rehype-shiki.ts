@@ -78,6 +78,15 @@ function normalizeLanguage(lang: string): string {
   return LANGUAGE_ALIASES[normalized] ?? normalized;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 async function getHighlighter(): Promise<HighlighterCore> {
   if (!highlighterCache) {
     highlighterCache = Promise.all([
@@ -176,18 +185,16 @@ export const rehypeShiki: Plugin<[], HastRoot, HastRoot> = function () {
             },
           });
 
+          const codeElementMatch = html.match(/<code[^>]*>[\s\S]*?<\/code>/i);
+          const codeElement = codeElementMatch ? codeElementMatch[0] : `<code>${escapeHtml(code)}</code>`;
+
           pre.tagName = "pre";
           pre.properties = {
             ...pre.properties,
             className: ["shiki-code-block"],
             dataLanguage: resolvedLang,
           };
-          pre.children = [
-            {
-              type: "raw" as const,
-              value: html,
-            },
-          ];
+          pre.children = [{ type: "raw" as const, value: codeElement }];
         } catch {
           // leave unhighlighted
         }

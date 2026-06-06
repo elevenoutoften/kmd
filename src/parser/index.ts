@@ -12,6 +12,7 @@ import raw from "rehype-raw";
 import { rehypeUrlPolicy, sanitizeSchema } from "./sanitize";
 import { rehypeShiki } from "./rehype-shiki";
 import { rehypeMermaid } from "./rehype-mermaid";
+import { rehypeCopyButton } from "./rehype-copy-button";
 import { extractText } from "./hast-utils";
 import { splitYamlFrontMatter } from "./design/extract/yaml";
 import type { Element, Root as HastRoot } from "hast";
@@ -82,16 +83,19 @@ export async function parseMarkdown(content: string, options?: ParseOptions): Pr
     pipeline.use(rehypeMermaid);
   }
 
-  if (!skipShiki) {
-    pipeline.use(rehypeShiki);
-  }
-
   pipeline
     .use(rehypeSlug)
     .use(rehypeSanitize, sanitizeSchema)
     .use(captureOutline)
-    .use(rehypeUrlPolicy)
-    .use(rehypeStringify, { allowDangerousHtml: true });
+    .use(rehypeUrlPolicy);
+
+  if (!skipShiki) {
+    pipeline.use(rehypeShiki);
+  }
+
+  pipeline.use(rehypeCopyButton);
+
+  pipeline.use(rehypeStringify, { allowDangerousHtml: true });
 
   const htmlFile = await pipeline.process(body);
 

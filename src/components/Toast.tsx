@@ -6,7 +6,7 @@ export interface ToastProps {
   onClose: () => void;
 }
 
-const AUTO_DISMISS_MS = 8000;
+const AUTO_DISMISS_MS = 2000;
 
 export const Toast: FC<ToastProps> = ({ entry, onClose }) => {
   const autoDismiss = entry.type === "info" || entry.type === "success";
