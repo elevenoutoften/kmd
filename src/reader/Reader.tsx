@@ -171,9 +171,7 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
 
   useEffect(() => {
     if (!html || !bodyRef.current) return;
-    if (bodyRef.current.dataset.codeEnhanced === "true") return;
-    bodyRef.current.dataset.codeEnhanced = "true";
-    
+
     // Small delay to ensure DOM is fully rendered
     const timer = setTimeout(() => {
       if (bodyRef.current) {

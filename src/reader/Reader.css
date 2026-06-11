@@ -410,22 +410,9 @@
 }
 
 .code-copy-button:hover {
-  color: var(--color-on-surface);
-  border-color: var(--color-on-surface);
-}
-
-.code-copy-button:active {
-  transform: scale(0.95);
-}
-
-.code-copy-button svg {
-  display: block;
-}
-
-.code-copy-button:hover {
   background-color: var(--color-surface);
   color: var(--color-on-surface);
-  border-color: var(--color-secondary);
+  border-color: var(--color-on-surface);
 }
 
 .code-copy-button:active {

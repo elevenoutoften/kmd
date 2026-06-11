@@ -29,14 +29,16 @@ export const Toast: FC<ToastProps> = ({ entry, onClose }) => {
           {entry.action.label}
         </button>
       )}
-      <button
-        className="toast__close"
-        type="button"
-        onClick={onClose}
-        aria-label="Dismiss"
-      >
-        &times;
-      </button>
+      {!autoDismiss && (
+        <button
+          className="toast__close"
+          type="button"
+          onClick={onClose}
+          aria-label="Dismiss"
+        >
+          &times;
+        </button>
+      )}
     </div>
   );
 };
