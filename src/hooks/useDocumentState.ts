@@ -22,12 +22,17 @@ export function useDocumentState() {
   const [documentName, setDocumentName] = useState<string | null>(null);
 
   const lastOpenedPath = useRef<string | null>(null);
+  // Paths with an open_document call in flight, so a duplicate request (e.g. the
+  // "opened" event and the get_opened_urls poll firing for the same file) does
+  // not open the document twice.
+  const openingPaths = useRef(new Set<string>());
 
   const openDocument = useCallback(
     async (path: string) => {
-      try {
-        if (path === lastOpenedPath.current) return;
+      if (path === lastOpenedPath.current || openingPaths.current.has(path)) return;
 
+      openingPaths.current.add(path);
+      try {
         const info = await invokeOpenDocument(path);
         lastOpenedPath.current = info.path_label;
 
@@ -37,15 +42,26 @@ export function useDocumentState() {
       } catch (err) {
         console.error("Failed to open document:", err);
         throw err; // Re-throw so callers (e.g. file-open handlers) can show user-facing errors
+      } finally {
+        openingPaths.current.delete(path);
       }
     },
     []
   );
+
+  const closeDocument = useCallback(() => {
+    lastOpenedPath.current = null;
+    openingPaths.current.clear();
+    setContent("");
+    setFilePath(null);
+    setDocumentName(null);
+  }, []);
 
   return {
     content,
     filePath,
     documentName,
     openDocument,
+    closeDocument,
   };
 }

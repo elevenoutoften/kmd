@@ -40,7 +40,7 @@ async function pickFile(): Promise<string | null> {
 function AppInner() {
   const { toasts, toast, dismiss } = useToast();
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const { content, filePath, documentName, openDocument } = useDocumentState();
+  const { content, filePath, documentName, openDocument, closeDocument } = useDocumentState();
   const [tab, setTab] = useState<"reader" | "design">(() =>
     filePath !== null ? getDesignDetection(content, documentName ?? undefined).preferredTab : "reader"
   );
@@ -216,6 +216,10 @@ function AppInner() {
     window.print();
   }, []);
 
+  const handleGoHome = useCallback(() => {
+    closeDocument();
+  }, [closeDocument]);
+
   useKeyboardShortcuts({
     onOpenFile: handlePickFile,
     onPrint: handlePrint,
@@ -277,7 +281,16 @@ function AppInner() {
     <div className="app-shell">
       <header className="toolbar">
         <div className="toolbar-left">
-          <span className="toolbar-brand">kmd</span>
+          <button
+            className="toolbar-brand"
+            onClick={handleGoHome}
+            disabled={!hasDocument}
+            aria-label={hasDocument ? "Back to welcome screen" : undefined}
+            title={hasDocument ? "Back to welcome screen" : undefined}
+            type="button"
+          >
+            kmd
+          </button>
           {hasDocument && showDesignTab && (
             <nav className="tab-nav">
               <button

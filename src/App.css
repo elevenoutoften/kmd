@@ -76,10 +76,37 @@
 }
 
 .toolbar-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
   font-weight: var(--font-weight-headline-md);
   font-size: var(--font-size-body-md);
   color: var(--color-on-surface);
   letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.toolbar-brand:disabled {
+  cursor: default;
+  color: var(--color-on-surface);
+}
+
+.toolbar-brand:not(:disabled):hover {
+  color: var(--color-tertiary);
+}
+
+.toolbar-brand:not(:disabled):active {
+  opacity: 0.7;
+}
+
+.toolbar-brand:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .toolbar-right {
