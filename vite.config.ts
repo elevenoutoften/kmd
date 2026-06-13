@@ -9,6 +9,18 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      // The "browser" builds of these dependencies touch the DOM at module
+      // scope (document.createElement / new DOMParser), which crashes the
+      // Markdown parse worker (no DOM in workers) and silently disabled
+      // syntax highlighting and Mermaid. Pin the portable builds everywhere.
+      "decode-named-character-reference": path.resolve(
+        __dirname,
+        "node_modules/decode-named-character-reference/index.js"
+      ),
+      "hast-util-from-html-isomorphic": path.resolve(
+        __dirname,
+        "node_modules/hast-util-from-html-isomorphic/lib/index.js"
+      ),
     },
   },
   clearScreen: false,

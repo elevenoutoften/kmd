@@ -1,4 +1,4 @@
-import type { ParseResult } from "./index";
+import { parseMarkdown, type ParseResult } from "./index";
 import { getCachedParseResult, setCachedParseResult } from "./parse-cache";
 
 interface PendingRequest {
@@ -55,7 +55,7 @@ export function parseMarkdownInWorker(content: string): Promise<ParseResult> {
   const id = ++nextId;
   const w = getWorker();
 
-  return new Promise<ParseResult>((resolve, reject) => {
+  const viaWorker = new Promise<ParseResult>((resolve, reject) => {
     pending.set(id, {
       resolve: (result: ParseResult) => {
         setCachedParseResult(content, result);
@@ -64,6 +64,15 @@ export function parseMarkdownInWorker(content: string): Promise<ParseResult> {
       reject,
     });
     w.postMessage({ type: "parse", content, id });
+  });
+
+  // If the worker itself dies (e.g. fails to load), fall back to parsing on
+  // the main thread so highlighting and Mermaid still arrive.
+  return viaWorker.catch(async (error) => {
+    console.error("[kmd:parse] worker parse failed, falling back to main thread:", error);
+    const result = await parseMarkdown(content);
+    setCachedParseResult(content, result);
+    return result;
   });
 }
 
