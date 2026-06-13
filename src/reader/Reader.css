@@ -139,6 +139,23 @@
   line-height: var(--line-height-body-sm);
 }
 
+/* Wide tables scroll horizontally inside their wrapper instead of stretching
+   the whole document. The margin moves to the wrapper so it sits below the
+   scroll area rather than inside it. */
+.mdr-body .table-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  margin-bottom: var(--space-md);
+}
+
+.mdr-body .table-wrapper > table {
+  width: max-content;
+  min-width: 100%;
+  margin-bottom: 0;
+}
+
 .mdr-body thead th {
   background-color: var(--color-table-header-bg);
   font-weight: var(--font-weight-label-caps);

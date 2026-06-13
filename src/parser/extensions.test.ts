@@ -83,6 +83,23 @@ describe("Shiki code highlighting", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Responsive tables
+// ---------------------------------------------------------------------------
+
+describe("Responsive table wrappers", () => {
+  it("wraps GFM tables in a scroll container", async () => {
+    const result = await parseMarkdown([
+      "| Feature | Support |",
+      "|---|---|",
+      "| Tables | yes |",
+    ].join("\n"));
+
+    expect(result.html).toContain('class="table-wrapper"');
+    expect(result.html).toContain("<table>");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Mermaid diagrams
 // ---------------------------------------------------------------------------
 

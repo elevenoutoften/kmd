@@ -50,6 +50,41 @@ function extractOutline(tree: HastRoot): OutlineEntry[] {
   return entries;
 }
 
+/**
+ * Wrap each GFM table in a `div.table-wrapper` so wide tables can scroll
+ * horizontally instead of forcing the whole document to overflow.
+ */
+function rehypeResponsiveTables() {
+  return (tree: HastRoot): HastRoot => {
+    visit(tree, "element", (node: Element, index, parent) => {
+      if (
+        node.tagName !== "table" ||
+        typeof index !== "number" ||
+        !parent ||
+        !("children" in parent)
+      ) {
+        return;
+      }
+
+      if (parent.type === "element" && parent.tagName === "div") {
+        const classes = parent.properties?.className;
+        if (Array.isArray(classes) && classes.includes("table-wrapper")) {
+          return;
+        }
+      }
+
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["table-wrapper"] },
+        children: [node],
+      };
+    });
+
+    return tree;
+  };
+}
+
 export function detectMath(content: string): boolean {
   const { body } = splitYamlFrontMatter(content);
   return MATH_DELIMITER_RE.test(body);
@@ -85,6 +120,7 @@ export async function parseMarkdown(content: string, options?: ParseOptions): Pr
 
   pipeline
     .use(rehypeSlug)
+    .use(rehypeResponsiveTables)
     .use(rehypeSanitize, sanitizeSchema)
     .use(captureOutline)
     .use(rehypeUrlPolicy);
