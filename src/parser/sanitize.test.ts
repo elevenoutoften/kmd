@@ -108,6 +108,13 @@ describe("parseMarkdown XSS mitigation", () => {
     expect(result.html).not.toContain("onerror");
   });
 
+  it("strips raw HTML buttons from Markdown content", async () => {
+    const result = await parseMarkdown('<button onclick="alert(1)">Click</button>');
+
+    expect(result.html).not.toContain("<button");
+    expect(result.html).not.toContain("onclick");
+  });
+
   it("adds rel=noopener to external links", async () => {
     const result = await parseMarkdown("[link](https://example.com)");
     expect(result.html).toContain("noopener");
