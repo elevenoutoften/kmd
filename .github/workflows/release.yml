@@ -149,49 +149,12 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "kmd v__VERSION__"
-          releaseBody: "## Downloads\n\n### macOS\n- **Apple Silicon (M1/M2/M3/M4)** → `kmd_0.3.0_aarch64.dmg` (installer) or `kmd_0.3.0_macos-arm64-portable.app.zip` (portable)\n- **Intel (x86_64)** → `kmd_0.3.0_x64.dmg` (installer) or `kmd_0.3.0_macos-x64-portable.app.zip` (portable)\n\n### Windows\n- **x86_64** → `kmd_0.3.0_x64-setup.exe` (installer) or `kmd_0.3.0_windows-x64-portable.exe` (portable)\n- **MSI** → `kmd_0.3.0_x64_en-US.msi`\n\n### Linux (Ubuntu)\n- **x86_64** → `kmd_0.3.0_amd64.deb` (Debian/Ubuntu) or `kmd_0.3.0_amd64.AppImage` (portable)\n\n---\n\n### What's new\n- Local document links\n- Code block copy buttons\n- Two-phase morph rendering with outline scroll-spy\n- Recent files deduplication and caching\n- Welcome screen navigation\n- Horizontal scroll for wide tables\n- Respects prefers-reduced-motion\n- Security: stripped raw HTML buttons from content\n- Fixed syntax highlighting and Mermaid in production builds"
+          releaseBody: "## Downloads\n\n### macOS\n- **Apple Silicon (M1/M2/M3/M4)** → `kmd_0.3.0_aarch64.dmg`\n- **Intel (x86_64)** → `kmd_0.3.0_x64.dmg`\n\n### Windows\n- **x86_64** → `kmd_0.3.0_x64-setup.exe` (installer) or `kmd_0.3.0_windows-x64-portable.exe` (portable)\n- **MSI** → `kmd_0.3.0_x64_en-US.msi`\n\n### Linux (Ubuntu / Debian)\n- **x86_64** → `kmd_0.3.0_amd64.deb`\n\n---\n\n### What's new\n- Local document links\n- Code block copy buttons\n- Two-phase morph rendering with outline scroll-spy\n- Recent files deduplication and caching\n- Welcome screen navigation\n- Horizontal scroll for wide tables\n- Respects prefers-reduced-motion\n- Security: stripped raw HTML buttons from content\n- Fixed syntax highlighting and Mermaid in production builds"
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }}
-
-      - name: Package macOS portable app
-        if: matrix.family == 'macos'
-        shell: bash
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          set -euo pipefail
-          version="${{ steps.package.outputs.version }}"
-          output="kmd_${version}_${{ matrix.portableName }}-portable.app.zip"
-          app_path="$(find src-tauri/target -type d -name '*.app' -path '*/release/bundle/macos/*' | head -n 1)"
-          if [ -z "$app_path" ]; then
-            echo "No macOS .app bundle found under src-tauri/target." >&2
-            exit 1
-          fi
-
-          # Sign and notarize only if Apple secrets are configured
-          if [ -n "$APPLE_ID" ]; then
-            codesign --verify --deep --strict --verbose=2 "$app_path"
-
-            notary_zip="$RUNNER_TEMP/kmd-${{ matrix.portableName }}-notary.zip"
-            ditto -c -k --keepParent "$app_path" "$notary_zip"
-            xcrun notarytool submit "$notary_zip" \
-              --apple-id "$APPLE_ID" \
-              --password "$APPLE_PASSWORD" \
-              --team-id "$APPLE_TEAM_ID" \
-              --wait
-            xcrun stapler staple "$app_path"
-            xcrun stapler validate "$app_path"
-            spctl --assess --type execute --verbose=4 "$app_path"
-          else
-            echo "Skipping codesign/notarization — Apple secrets not configured"
-          fi
-
-          ditto -c -k --keepParent "$app_path" "$output"
 
       - name: Build Windows portable app
         if: matrix.family == 'windows'
@@ -201,28 +164,12 @@ jobs:
           $output = "kmd_${version}_${{ matrix.portableName }}-portable.exe"
           Copy-Item -LiteralPath "src-tauri/target/release/kmd.exe" -Destination $output -Force
 
-      - name: Build Linux portable AppImage
-        if: matrix.family == 'linux'
-        shell: bash
-        run: |
-          version="${{ steps.package.outputs.version }}"
-          appimage_path="$(find src-tauri/target/release/bundle -name '*.AppImage' | head -n 1)"
-          if [ -z "$appimage_path" ]; then
-            echo "No AppImage found — skipping portable build"
-            exit 0
-          fi
-          output="kmd_${version}_${{ matrix.portableName }}-portable.AppImage"
-          cp "$appimage_path" "$output"
-          echo "Portable AppImage: $output"
-
       - name: Upload portable release asset
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.package.outputs.version }}
           files: |
             kmd_*_${{ matrix.portableName }}-portable.exe
-            kmd_*_${{ matrix.portableName }}-portable.app.zip
-            kmd_*_${{ matrix.portableName }}-portable.AppImage
           fail_on_unmatched_files: false
 
       - name: Delete Apple signing keychain
