@@ -1,4 +1,5 @@
 import { isTauriRuntime } from "@/utils/platform";
+import { RAW_IMAGE_SRC_ATTR } from "./domMorph";
 
 interface AssetData {
   mime_type: string;
@@ -42,6 +43,9 @@ export async function resolveRelativeImages(
         relativePath: src,
       })
         .then((data) => {
+          // Keep the Markdown-authored src around so DOM morphing can tell
+          // a resolved image apart from genuinely changed content.
+          img.setAttribute(RAW_IMAGE_SRC_ATTR, src);
           img.src = `data:${data.mime_type};base64,${data.bytes_base64}`;
         })
         .catch(() => {

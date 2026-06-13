@@ -69,6 +69,11 @@ export async function renderMermaidPlaceholders(container: HTMLElement): Promise
   }
 
   for (const placeholder of placeholders) {
+    // Skip placeholders that already rendered so repeat passes (e.g. after
+    // a DOM morph) do not flash existing diagrams.
+    if (placeholder.dataset.mermaidRendered === "true") continue;
+    placeholder.dataset.mermaidRendered = "true";
+
     const source = placeholder.dataset.mermaidSource ?? "";
     const target = placeholder.querySelector<HTMLDivElement>(".mermaid-render-target");
     if (!target || !source) continue;
