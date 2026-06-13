@@ -37,6 +37,12 @@ jobs:
             args: ""
             rustTargets: ""
             portableName: windows-x64
+          - name: Ubuntu
+            family: linux
+            runner: ubuntu-24.04
+            args: ""
+            rustTargets: ""
+            portableName: linux-x64
 
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
@@ -64,6 +70,12 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+
+      - name: Install Linux dependencies
+        if: matrix.family == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
         run: npm ci
@@ -137,8 +149,8 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "kmd v__VERSION__"
-          releaseBody: "Download the desktop installers from the assets below."
-          releaseDraft: false
+          releaseBody: "## Downloads\n\n### macOS\n- **Apple Silicon (M1/M2/M3/M4)** → `kmd_0.3.0_aarch64.dmg` (installer) or `kmd_0.3.0_macos-arm64-portable.app.zip` (portable)\n- **Intel (x86_64)** → `kmd_0.3.0_x64.dmg` (installer) or `kmd_0.3.0_macos-x64-portable.app.zip` (portable)\n\n### Windows\n- **x86_64** → `kmd_0.3.0_x64-setup.exe` (installer) or `kmd_0.3.0_windows-x64-portable.exe` (portable)\n- **MSI** → `kmd_0.3.0_x64_en-US.msi`\n\n### Linux (Ubuntu)\n- **x86_64** → `kmd_0.3.0_amd64.deb` (Debian/Ubuntu) or `kmd_0.3.0_amd64.AppImage` (portable)\n\n---\n\n### What's new\n- Local document links\n- Code block copy buttons\n- Two-phase morph rendering with outline scroll-spy\n- Recent files deduplication and caching\n- Welcome screen navigation\n- Horizontal scroll for wide tables\n- Respects prefers-reduced-motion\n- Security: stripped raw HTML buttons from content\n- Fixed syntax highlighting and Mermaid in production builds"
+          releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
           updaterJsonPreferNsis: true
@@ -189,6 +201,20 @@ jobs:
           $output = "kmd_${version}_${{ matrix.portableName }}-portable.exe"
           Copy-Item -LiteralPath "src-tauri/target/release/kmd.exe" -Destination $output -Force
 
+      - name: Build Linux portable AppImage
+        if: matrix.family == 'linux'
+        shell: bash
+        run: |
+          version="${{ steps.package.outputs.version }}"
+          appimage_path="$(find src-tauri/target/release/bundle -name '*.AppImage' | head -n 1)"
+          if [ -z "$appimage_path" ]; then
+            echo "No AppImage found — skipping portable build"
+            exit 0
+          fi
+          output="kmd_${version}_${{ matrix.portableName }}-portable.AppImage"
+          cp "$appimage_path" "$output"
+          echo "Portable AppImage: $output"
+
       - name: Upload portable release asset
         uses: softprops/action-gh-release@v2
         with:
@@ -196,6 +222,7 @@ jobs:
           files: |
             kmd_*_${{ matrix.portableName }}-portable.exe
             kmd_*_${{ matrix.portableName }}-portable.app.zip
+            kmd_*_${{ matrix.portableName }}-portable.AppImage
           fail_on_unmatched_files: false
 
       - name: Delete Apple signing keychain

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicerdicer/tauri-v2-schema/main/tauri.schema.json",
   "productName": "kmd",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "identifier": "io.github.elevenoutoften.kmd",
   "build": {
     "beforeDevCommand": "npm run dev",
