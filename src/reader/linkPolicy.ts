@@ -2,6 +2,19 @@ export type RenderedLinkAction = "fragment" | "internal" | "external" | "blocked
 
 const SAFE_EXTERNAL_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
 
+export interface InternalHrefParts {
+  path: string;
+  fragment: string | null;
+}
+
+function decodeHrefPart(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export function classifyRenderedLink(href: string): RenderedLinkAction {
   const trimmed = href.trim();
 
@@ -33,6 +46,17 @@ export function classifyRenderedLink(href: string): RenderedLinkAction {
 export function normalizeExternalHref(href: string): string {
   const trimmed = href.trim();
   return trimmed.startsWith("//") ? `https:${trimmed}` : trimmed;
+}
+
+export function parseInternalHref(href: string): InternalHrefParts {
+  const hashIndex = href.indexOf("#");
+  const pathPart = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const fragmentPart = hashIndex === -1 ? null : href.slice(hashIndex + 1);
+
+  return {
+    path: decodeHrefPart(pathPart),
+    fragment: fragmentPart ? decodeHrefPart(fragmentPart) : null,
+  };
 }
 
 export function getFragmentIdFromHref(href: string): string | null {

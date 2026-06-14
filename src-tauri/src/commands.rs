@@ -194,6 +194,31 @@ fn canonicalize_under_base(base: &Path, target: &Path) -> Result<PathBuf, String
     Ok(canonical_target)
 }
 
+fn resolve_existing_local_path(base_dir: &Path, relative_path: &str) -> Result<PathBuf, String> {
+    let resolved = base_dir.join(relative_path);
+    let canonical = canonicalize_under_base(base_dir, &resolved)?;
+
+    if canonical.is_file() || canonical.is_dir() {
+        return Ok(canonical);
+    }
+
+    let relative = Path::new(relative_path);
+    let has_extension = relative.extension().is_some();
+    let is_directory_hint = relative_path.ends_with('/') || relative_path.ends_with('\\');
+
+    if !has_extension && !is_directory_hint {
+        for extension in ["md", "markdown"] {
+            let with_extension = resolved.with_extension(extension);
+            let canonical = canonicalize_under_base(base_dir, &with_extension)?;
+            if canonical.is_file() {
+                return Ok(canonical);
+            }
+        }
+    }
+
+    Err(format!("path not found: {relative_path}"))
+}
+
 fn system_time_to_secs(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs()
 }
@@ -472,15 +497,9 @@ pub fn resolve_local_path(
         .parent()
         .ok_or_else(|| "document path has no parent directory".to_string())?;
 
-    let resolved = base_dir.join(&relative_path);
-
-    let canonical = canonicalize_under_base(base_dir, &resolved)?;
+    let canonical = resolve_existing_local_path(base_dir, &relative_path)?;
 
     let is_dir = canonical.is_dir();
-
-    if !canonical.is_file() && !is_dir {
-        return Err(format!("path not found: {relative_path}"));
-    }
 
     Ok(ResolvedLocalPath {
         absolute_path: canonical.to_string_lossy().into_owned(),
@@ -550,7 +569,8 @@ pub fn export_html(path: String, html: String) -> Result<(), String> {
 mod tests {
     use super::{
         canonicalize_under_base, clean_recent_entries, dedupe_recent_entries,
-        is_obsolete_duplicate, normalize_document_target, RecentFileEntry,
+        is_obsolete_duplicate, normalize_document_target, resolve_local_path,
+        RecentFileEntry,
     };
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -669,6 +689,68 @@ mod tests {
         let err = canonicalize_under_base(&base, &outside.join("../outside/secret.png"))
             .expect_err("target outside the base directory should be rejected");
         assert!(err.contains("path traversal rejected"));
+
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn resolve_local_path_falls_back_to_md_for_extensionless_links() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time should be after epoch")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("kmd-link-test-{unique}"));
+        fs::create_dir_all(&root).expect("test dir should be created");
+        let source = root.join("index.md");
+        let target = root.join("01_Design_Pillars.md");
+        fs::write(&source, "# Index").expect("source doc should be created");
+        fs::write(&target, "# Design Pillars").expect("target doc should be created");
+
+        let resolved = resolve_local_path(
+            source.to_string_lossy().into_owned(),
+            "01_Design_Pillars".to_string(),
+        )
+        .expect("extensionless wikilink target should resolve to .md");
+
+        assert_eq!(
+            resolved.absolute_path,
+            target
+                .canonicalize()
+                .expect("target should canonicalize")
+                .to_string_lossy()
+        );
+        assert!(!resolved.is_dir);
+
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn resolve_local_path_falls_back_to_markdown_for_extensionless_links() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time should be after epoch")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("kmd-markdown-link-test-{unique}"));
+        fs::create_dir_all(&root).expect("test dir should be created");
+        let source = root.join("index.md");
+        let target = root.join("01_Design_Pillars.markdown");
+        fs::write(&source, "# Index").expect("source doc should be created");
+        fs::write(&target, "# Design Pillars").expect("target doc should be created");
+
+        let resolved = resolve_local_path(
+            source.to_string_lossy().into_owned(),
+            "01_Design_Pillars".to_string(),
+        )
+        .expect("extensionless wikilink target should resolve to .markdown");
+
+        assert_eq!(
+            resolved.absolute_path,
+            target
+                .canonicalize()
+                .expect("target should canonicalize")
+                .to_string_lossy()
+        );
+        assert!(!resolved.is_dir);
 
         fs::remove_dir_all(&root).ok();
     }

@@ -8,7 +8,12 @@ import { resolveRelativeImages } from "./resolveAssets";
 import { morphMarkdownBody } from "./domMorph";
 import { DocumentShell } from "./DocumentShell";
 import { findAnchorTarget, scrollContainerToTarget } from "./anchorNavigation";
-import { classifyRenderedLink, getFragmentIdFromHref, normalizeExternalHref } from "./linkPolicy";
+import {
+  classifyRenderedLink,
+  getFragmentIdFromHref,
+  normalizeExternalHref,
+  parseInternalHref,
+} from "./linkPolicy";
 import { enhanceCodeBlocks, removeCodeBlockEnhancements } from "./codeBlockEnhancements";
 import { isTauriRuntime } from "@/utils/platform";
 import { useToast } from "@/hooks/useToast";
@@ -48,8 +53,7 @@ async function handleInternalLink(
     return { openPath: null, fragment: null };
   }
 
-  const [pathPart, fragmentPart] = href.split("#", 2);
-  const fragment = fragmentPart ? decodeURIComponent(fragmentPart) : null;
+  const { path: pathPart, fragment } = parseInternalHref(href);
 
   if (!pathPart) {
     return { openPath: null, fragment };

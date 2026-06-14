@@ -10,6 +10,7 @@ import rehypeStringify from "rehype-stringify";
 import rehypeSlug from "rehype-slug";
 import raw from "rehype-raw";
 import { rehypeUrlPolicy, sanitizeSchema } from "./sanitize";
+import { remarkWikilinks } from "./remark-wikilinks";
 import { rehypeShiki } from "./rehype-shiki";
 import { rehypeMermaid } from "./rehype-mermaid";
 import { rehypeCopyButton } from "./rehype-copy-button";
@@ -106,6 +107,7 @@ export async function parseMarkdown(content: string, options?: ParseOptions): Pr
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMath)
+    .use(remarkWikilinks)
     .use(remarkGithubAlerts)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(raw);

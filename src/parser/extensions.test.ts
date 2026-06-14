@@ -100,6 +100,38 @@ describe("Responsive table wrappers", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Wikilinks
+// ---------------------------------------------------------------------------
+
+describe("Wikilinks", () => {
+  it("renders piped wikilinks as local links", async () => {
+    const result = await parseMarkdown("[[01_Design_Pillars|01 Design Pillars]]");
+
+    expect(result.html).toContain('<a href="01_Design_Pillars">01 Design Pillars</a>');
+  });
+
+  it("uses the target as the label when no explicit label is provided", async () => {
+    const result = await parseMarkdown("[[01_Design_Pillars]]");
+
+    expect(result.html).toContain('<a href="01_Design_Pillars">01_Design_Pillars</a>');
+  });
+
+  it("leaves wikilinks inside inline code as literal text", async () => {
+    const result = await parseMarkdown("`[[01_Design_Pillars|01 Design Pillars]]`");
+
+    expect(result.html).toContain("<code>[[01_Design_Pillars|01 Design Pillars]]</code>");
+    expect(result.html).not.toContain("<a ");
+  });
+
+  it("sanitizes unsafe wikilink targets", async () => {
+    const result = await parseMarkdown("[[javascript:alert(1)|Click]]");
+
+    expect(result.html).toContain(">Click</a>");
+    expect(result.html).not.toContain("javascript:");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Mermaid diagrams
 // ---------------------------------------------------------------------------
 

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { classifyRenderedLink, getFragmentIdFromHref, normalizeExternalHref } from "./linkPolicy";
+import {
+  classifyRenderedLink,
+  getFragmentIdFromHref,
+  normalizeExternalHref,
+  parseInternalHref,
+} from "./linkPolicy";
 
 describe("rendered link click policy", () => {
   it.each(["", "#", "/docs/readme.md", "./other.md", "../parent.md", "docs/guide.md"])(
@@ -38,5 +43,23 @@ describe("rendered link click policy", () => {
     expect(getFragmentIdFromHref("#heading%20with%20space")).toBe("heading with space");
     expect(getFragmentIdFromHref("#user-content-fn-1")).toBe("user-content-fn-1");
     expect(getFragmentIdFromHref("docs/guide.md#section")).toBeNull();
+  });
+
+  it("extracts and decodes internal link paths and fragments", () => {
+    expect(parseInternalHref("My%20Doc#Heading%20One")).toEqual({
+      path: "My Doc",
+      fragment: "Heading One",
+    });
+    expect(parseInternalHref("docs/guide.md")).toEqual({
+      path: "docs/guide.md",
+      fragment: null,
+    });
+  });
+
+  it("leaves malformed internal encodings unchanged", () => {
+    expect(parseInternalHref("%E0%A4%A")).toEqual({
+      path: "%E0%A4%A",
+      fragment: null,
+    });
   });
 });
