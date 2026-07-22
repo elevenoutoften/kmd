@@ -1,5 +1,12 @@
 # kmd-web: Reusable Web Library Research
 
+> Status: Informative historical research. The binding
+> [ecosystem North Star](17-kmd-ecosystem-north-star.md),
+> [implementation plan](18-kmd-web-implementation-plan.md), and
+> [ADR 001](../adr/001-renderresult-shape-and-package-boundaries.md) supersede
+> proposals in this document where they differ, including the catch-all
+> `KmdAdapter`, package boundaries, and release format.
+
 ## Goal
 
 Extract kmd's Markdown rendering engine into a lightweight, framework-agnostic npm library (`kmd-web`) that can be embedded in any website or project. Plan the architecture so future features (fonts, editor mode, etc.) propagate across all platforms: kmd desktop, kmd-ios, kmd-unity, and kmd-web.

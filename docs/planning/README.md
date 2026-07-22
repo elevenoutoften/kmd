@@ -27,6 +27,8 @@ Researched: 2026-05-07
 | `16-references.md` | Curated source list |
 | `17-kmd-ecosystem-north-star.md` | Long-term repository, package, ownership, security, and feature-propagation direction for the kmd family |
 | `18-kmd-web-implementation-plan.md` | Phased, dependency-aware execution plan for extracting and adopting `kmd-web` |
+| `19-kmd-web-library-research.md` | Initial reusable-library research; informative and superseded where the North Star or ADR differs |
+| `20-kmd-web-extraction-inventory.md` | File-by-file extraction inventory, coupling evidence, security boundaries, and baseline results |
 
 ## Executive decision
 
