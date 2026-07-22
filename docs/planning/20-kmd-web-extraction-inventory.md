@@ -1,13 +1,15 @@
 # KWEB-001: Extraction Inventory and Module Classification
 
 > Evidence-backed map of every production file under `kmd/src/parser`, `kmd/src/reader`, shared design components/styles, and the corresponding `kmd-ios` areas. Produced as the baseline for extracting a reusable `kmd-web` library.
+>
+> Revised v2 (2026-07-22): corrected build result, diverged counts, dependency labeling, security-surface inventory, and module classifications to align with the North Star (`docs/planning/17-kmd-ecosystem-north-star.md`).
 
 ## Method
 
 1. Enumerated all non-test `.ts`/`.tsx`/`.css` files under `src/parser/`, `src/reader/`, `src/components/`, `src/hooks/`, `src/utils/`, and top-level `src/` in both repos.
 2. Ran `diff` on every file pair to classify as **identical**, **diverged**, or **platform-only**.
 3. Searched for Tauri imports (`@tauri-apps/*`, `isTauriRuntime`, `invoke`), browser globals (`document.`, `window.`, `navigator.`, `localStorage`, `Worker`, `postMessage`), bundler-specific patterns (`new URL(..., import.meta.url)`), CSS imports, and heavy dynamic imports (Mermaid, KaTeX, Shiki).
-4. Ran baseline tests and TypeScript compilation on both repos.
+4. Ran baseline tests, TypeScript compilation, and production build on both repos.
 
 ---
 
@@ -24,14 +26,16 @@
 | `parse-worker.ts` | ✓ | ✓ | Identical | Web Worker entry. Uses `self.postMessage`. |
 | `parse-worker-bridge.ts` | ✓ | ✓ | Identical | Worker manager. Uses `new URL("./parse-worker.ts", import.meta.url)` — bundler-specific. |
 | `rehype-shiki.ts` | ✓ | ✓ | Identical | Syntax highlighting. Lazy-loads `shiki/core` + `@shikijs/langs/*` + `@shikijs/themes/*`. |
-| `rehype-mermaid.ts` | ✓ | ✓ | Identical | Mermaid placeholder injection + `renderMermaidPlaceholders()`. Uses DOM (`querySelector`, `innerHTML`) for rendering. Lazy-loads `mermaid`. |
+| `rehype-mermaid.ts` | ✓ | ✓ | Identical | Mermaid placeholder injection + `renderMermaidPlaceholders()`. Rehype plugin (tree transform) is pure. `renderMermaidPlaceholders()` uses DOM (`querySelector`, `innerHTML`) — must split to browser layer. Lazy-loads `mermaid`. |
 | `rehype-copy-button.ts` | ✓ | ✓ | **Diverged** | Whitespace-only diff (trailing spaces). 8 changed lines, zero functional difference. |
 | `lazy-katex-css.ts` | ✓ | ✓ | Identical | Lazy-imports `katex/dist/katex.min.css`. |
 | `remark-wikilinks.ts` | ✓ | ✗ | **kmd-only** | Custom remark plugin for `[[wikilink]]` syntax. Not yet in kmd-ios. |
 | `design/` (20 files) | ✓ | ✓ | Identical | All 20 design pipeline files identical. Pure TS. |
-| `ios-security.test.ts` | ✗ | ✓ | **kmd-ios-only** | iOS WebView security audit tests. Test-only, not production. |
+| `ios-security.test.ts` | ✗ | ✓ | **kmd-ios-only** | iOS WebView security audit tests (22 tests). Test-only, not production. |
 
 ### 1.2 Parser classification
+
+Per the North Star layer model: **core is DOM-free**, browser-coupled code goes in the browser runtime layer.
 
 | Module | Classification | Rationale |
 |--------|---------------|-----------|
@@ -39,14 +43,15 @@
 | `sanitize.ts` | **Core** | URL policy + sanitize schema. Pure TS. |
 | `hast-utils.ts` | **Core** | HAST text extraction. Pure TS. |
 | `parse-cache.ts` | **Core** | LRU cache. Pure TS. |
-| `parse-worker.ts` | **Core (worker entry)** | Web Worker message handler. Uses `self` (worker scope). |
-| `parse-worker-bridge.ts` | **Optional worker** | Worker manager. Uses `new URL(..., import.meta.url)` — bundler-specific. Must be optional. |
-| `rehype-shiki.ts` | **Optional heavy feature** | Syntax highlighting. Lazy-loads Shiki. No DOM deps. |
-| `rehype-mermaid.ts` | **Optional heavy feature** | Mermaid rendering. Has DOM coupling in `renderMermaidPlaceholders()` — uses `querySelector`, `innerHTML`. |
+| `parse-worker.ts` | **Optional worker** | Web Worker message handler. Uses `self` (worker scope). |
+| `parse-worker-bridge.ts` | **Optional worker** | Worker manager. Uses `new URL(..., import.meta.url)` — bundler-specific. |
+| `rehype-shiki.ts` | **Core (optional, lazy)** | Syntax highlighting rehype plugin. Lazy-loads Shiki. No DOM deps. |
+| `rehype-mermaid.ts` (rehype plugin) | **Core (optional, lazy)** | Tree transform that replaces mermaid code blocks with placeholder divs. Pure HAST. |
+| `rehype-mermaid.ts` (`renderMermaidPlaceholders`) | **Browser runtime** | Post-parse DOM rendering. Uses `querySelector`, `innerHTML`. Must split from the rehype plugin. |
 | `rehype-copy-button.ts` | **Core** | Adds copy buttons to code blocks. Pure HAST transform. |
-| `lazy-katex-css.ts` | **Optional heavy feature** | Lazy CSS import for KaTeX. |
+| `lazy-katex-css.ts` | **Core (optional, lazy)** | Lazy CSS import for KaTeX. |
 | `remark-wikilinks.ts` | **Core** | Wikilink syntax plugin. Pure remark plugin. |
-| `design/` (all 20 files) | **Core** | Design Mode pipeline (detect → extract → merge → resolve → enrich → IR). Pure TS. |
+| `design/` (all 20 files) | **Optional design (lazy)** | Design Mode pipeline (detect → extract → merge → resolve → enrich → IR). Pure TS. Lazy-loaded optional feature. |
 
 ### 1.3 Parser coupling evidence
 
@@ -54,7 +59,9 @@
 
 **Bundler-specific**: `parse-worker-bridge.ts:16` uses `new URL("./parse-worker.ts", import.meta.url)` to spawn a Web Worker. This is a Vite/webpack-specific pattern. For `kmd-web`, the worker must be optional with a sync fallback (already exists in `parseMarkdownInWorker` — falls back to `parseMarkdown` on worker error).
 
-**DOM coupling**: `rehype-mermaid.ts:57-94` — `renderMermaidPlaceholders()` uses `container.querySelectorAll`, `target.innerHTML`, `placeholder.dataset`. This function runs post-parse, in the browser, and requires a DOM container. It is not part of the pure parsing pipeline. The rehype plugin itself (tree transform) is pure; only the render step needs DOM.
+**DOM coupling**: `rehype-mermaid.ts:57-94` — `renderMermaidPlaceholders()` uses `container.querySelectorAll`, `target.innerHTML`, `placeholder.dataset`. This function runs post-parse, in the browser, and requires a DOM container. It is not part of the pure parsing pipeline. The rehype plugin itself (tree transform) is pure; only the render step needs DOM. **This function must be split into the browser runtime layer.**
+
+**Post-sanitization DOM insertion risk**: `renderMermaidPlaceholders()` injects `target.innerHTML = result.svg` (line 92) **after** the HTML sanitizer (`rehype-sanitize`) has already run. The Mermaid SVG output is not re-sanitized. See §7.3 for the security boundary documentation.
 
 **Heavy dynamic imports**: Shiki (30+ language imports), Mermaid, KaTeX CSS — all lazy-loaded via `import()`. These are optional and should remain lazy in the library.
 
@@ -78,17 +85,19 @@
 
 ### 2.2 Reader classification
 
+Per the North Star layer model:
+
 | Module | Classification | Rationale |
 |--------|---------------|-----------|
-| `Reader.tsx` | **React** | Main reader component. React hooks + DOM. Tauri coupling via `isTauriRuntime()` guards + dynamic `@tauri-apps/*` imports. Toast coupling via `useToast()`. |
+| `Reader.tsx` | **React** | Main reader component. React hooks + DOM. Tauri coupling via `isTauriRuntime()` guards + dynamic `@tauri-apps/*` imports. Toast coupling via `useToast()`. Must refactor to use capability contracts. |
 | `DocumentShell.tsx` | **React** | Outline sidebar + scroll container. Zero Tauri deps. Major mobile divergence. |
-| `domMorph.ts` | **Core (browser runtime)** | DOM diffing. Pure DOM API. No React, no Tauri. |
-| `anchorNavigation.ts` | **Core (browser runtime)** | Anchor scrolling. Pure DOM. |
-| `linkPolicy.ts` | **Core** | URL classification. Pure TS. |
-| `codeBlockEnhancements.ts` | **Core (browser runtime)** | Code block enhancements. Uses `navigator.clipboard`, `document.createElement`, `document.execCommand`. Pure DOM. |
-| `resolveAssets.ts` | **Desktop adapter** | Tauri IPC for image resolution. `isTauriRuntime()` + `invoke("resolve_asset")`. Platform-specific. |
-| `Reader.css` | **Styles/tokens** | Content styles. Diverged for iOS. |
-| `DocumentShell.css` | **Styles/tokens** | Chrome styles. Diverged for iOS. |
+| `domMorph.ts` | **Browser runtime** | DOM diffing. Pure DOM API. No React, no Tauri. |
+| `anchorNavigation.ts` | **Browser runtime** | Anchor scrolling. Pure DOM. |
+| `linkPolicy.ts` | **Core** | URL classification. Pure TS. No DOM, no Tauri. |
+| `codeBlockEnhancements.ts` | **Browser runtime** | Code block enhancements. Uses `navigator.clipboard`, `document.createElement`, `document.execCommand`. Pure DOM. Clipboard must be injected via `ClipboardProvider` capability. |
+| `resolveAssets.ts` | **Product shell (adapter)** | Tauri IPC for image resolution. `isTauriRuntime()` + `invoke("resolve_asset")`. Platform-specific. Replaced by `AssetResolver` capability. |
+| `Reader.css` | **Styles** | Content styles. Diverged for iOS. |
+| `DocumentShell.css` | **Styles** | Chrome styles. Diverged for iOS. |
 
 ### 2.3 Reader coupling evidence
 
@@ -100,14 +109,14 @@
 - Line 70: `const { openPath } = await import("@tauri-apps/plugin-opener")` — open directory
 - Line 83: `const { openPath } = await import("@tauri-apps/plugin-opener")` — open non-markdown file
 
-All Tauri calls are **dynamic imports guarded by `isTauriRuntime()`**. The non-Tauri fallback uses `window.open()` (line 44). This means the adapter pattern can replace these guards cleanly.
+All Tauri calls are **dynamic imports guarded by `isTauriRuntime()`**. The non-Tauri fallback uses `window.open()` (line 44). In the library, these are replaced by `LinkHandler` capability contracts. `isTauriRuntime()` stays in the product shell, not in the library.
 
 **Toast/notification coupling** (in `Reader.tsx`):
 - Line 19: `import { useToast } from "@/hooks/useToast"`
 - Line 108: `const { toast } = useToast()`
 - Line 268: `toastRef.current(message, { type: "success" })` — called after copying link path to clipboard
 
-The toast coupling is through a React context (`ToastProvider`). For the library, this should be replaced with an optional callback prop (`onToast?: (message: string, type: "success" | "error") => void`).
+The toast coupling is through a React context (`ToastProvider`). For the library, this is replaced with an optional `NotificationSink` capability.
 
 **DOM coupling** (browser runtime):
 - `Reader.tsx:152`: `parseMarkdownInWorker(content)` — worker bridge
@@ -124,7 +133,7 @@ The toast coupling is through a React context (`ToastProvider`). For the library
 - Line 18: `const { invoke } = await import("@tauri-apps/api/core")`
 - Line 22: `invoke<AssetData>("resolve_asset", { docPath, relativePath: src })`
 
-This is entirely platform-specific and must be replaced by an adapter method (`adapter.resolveImage()`).
+This is entirely platform-specific and is replaced by the `AssetResolver` capability contract in the product shell.
 
 ---
 
@@ -144,11 +153,11 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 
 | Module | Classification | Rationale |
 |--------|---------------|-----------|
-| `DesignCatalog.tsx` | **React (optional design)** | Design Mode preview. Uses React, `document.getElementById`, `document.createElement`, `document.head.appendChild`. |
-| `DesignMode.tsx` | **React (optional design)** | Design Mode tab wrapper. Uses `useMemo`. |
-| `exportHtml.ts` | **Core (optional design)** | HTML export. Uses `createElement` from React, reads `sheet.cssRules`. |
-| `showcaseTheme.ts` | **Core (optional design)** | Showcase theme data. Pure TS. |
-| `DesignCatalog.css` | **Styles/tokens (optional design)** | Design catalog styles. |
+| `DesignCatalog.tsx` | **Optional design (React)** | Design Mode preview. Uses React, `document.getElementById`, `document.createElement`, `document.head.appendChild`. |
+| `DesignMode.tsx` | **Optional design (React)** | Design Mode tab wrapper. Uses `useMemo`. |
+| `exportHtml.ts` | **Optional design** | HTML export. Uses `createElement` from React, reads `sheet.cssRules`. |
+| `showcaseTheme.ts` | **Optional design** | Showcase theme data. Pure TS. |
+| `DesignCatalog.css` | **Optional design (styles)** | Design catalog styles. |
 
 ---
 
@@ -158,14 +167,14 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 
 | File | kmd | kmd-ios | Status | Classification |
 |------|-----|---------|--------|----------------|
-| `tokens.css` | ✓ | ✓ | Identical | **Styles/tokens** — CSS custom properties. Pure CSS. |
+| `tokens.css` | ✓ | ✓ | Identical | **Styles** — CSS custom properties. Pure CSS. |
 | `theme.ts` | ✓ | ✓ | **Diverged** (51 lines) | **Product shell** — localStorage theme. Diverged for iOS. |
 | `App.tsx` | ✓ | ✓ | **Diverged** (278 lines) | **Product shell** — app entry. Heavy Tauri coupling. |
 | `App.css` | ✓ | ✓ | **Diverged** (88 lines) | **Product shell** — app styles. |
 | `global.css` | ✓ | ✓ | **Diverged** (28 lines) | **Product shell** — global styles. |
 | `main.tsx` | ✓ | ✓ | **Diverged** (13 lines) | **Product shell** — React root. |
-| `updater.ts` | ✓ | ✓ | Identical | **Desktop adapter** — Tauri updater. |
-| `tauri-types.d.ts` | ✓ | ✓ | Identical | **Desktop adapter** — Tauri type helpers. |
+| `updater.ts` | ✓ | ✓ | Identical | **Product shell** — Tauri updater. |
+| `tauri-types.d.ts` | ✓ | ✓ | Identical | **Product shell** — Tauri type helpers. |
 | `vite-env.d.ts` | ✓ | ✓ | Identical | **Product shell** — Vite env types. |
 
 ### 4.2 Hooks
@@ -183,7 +192,7 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 
 | File | kmd | kmd-ios | Status | Classification |
 |------|-----|---------|--------|----------------|
-| `platform.ts` | ✓ | ✓ | Identical | **Core** — `isTauriRuntime()` check. |
+| `platform.ts` | ✓ | ✓ | Identical | **Product shell** — `isTauriRuntime()` check. Not in core (per North Star: no runtime detection in library core). |
 | `viewportHeight.ts` | ✗ | ✓ | **iOS-only** | **iOS adapter** — viewport height management. |
 
 ### 4.4 Components (non-design)
@@ -210,7 +219,7 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 
 | File | Reason |
 |------|--------|
-| `src/parser/ios-security.test.ts` | iOS WebView security audit tests. Test-only. |
+| `src/parser/ios-security.test.ts` | iOS WebView security audit tests (22 tests). Test-only. |
 | `src/components/SupportPanel.tsx` | iOS StoreKit support panel. |
 | `src/components/SupportPanel.css` | iOS StoreKit support panel styles. |
 | `src/hooks/useSupporterStatus.ts` | iOS StoreKit supporter status. |
@@ -230,73 +239,81 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 
 | Area | Files | Count |
 |------|-------|-------|
-| Parser core | `index.ts`*, `sanitize.ts`, `hast-utils.ts`, `parse-cache.ts`, `parse-worker.ts`, `parse-worker-bridge.ts`, `rehype-copy-button.ts`*, `lazy-katex-css.ts` | 8 |
-| Parser design | All 20 `design/` files | 20 |
-| Parser optional | `rehype-shiki.ts`, `rehype-mermaid.ts` | 2 |
-| Reader core | `domMorph.ts`, `anchorNavigation.ts`, `linkPolicy.ts`* | 3 |
-| Reader browser | `codeBlockEnhancements.ts`* | 1 |
-| Reader Tauri | `resolveAssets.ts` | 1 |
+| Parser core | `index.ts`*, `sanitize.ts`, `hast-utils.ts`, `parse-cache.ts`, `rehype-copy-button.ts`* | 5 |
+| Parser optional (lazy) | `rehype-shiki.ts`, `rehype-mermaid.ts`, `lazy-katex-css.ts` | 3 |
+| Parser worker | `parse-worker.ts`, `parse-worker-bridge.ts` | 2 |
+| Parser design (optional) | All 20 `design/` files | 20 |
+| Reader core (pure TS) | `linkPolicy.ts`* | 1 |
+| Reader browser runtime | `domMorph.ts`, `anchorNavigation.ts`, `codeBlockEnhancements.ts`* | 3 |
+| Reader product shell | `resolveAssets.ts` | 1 |
 | Reader React | `DocumentShell.tsx`*, `Reader.tsx`* | 2 |
 | Styles | `tokens.css`, `Reader.css`*, `DocumentShell.css`* | 3 |
 | Design components | `DesignCatalog.tsx`, `DesignMode.tsx`, `exportHtml.ts`, `showcaseTheme.ts`, `DesignCatalog.css`* | 5 |
-| Shared infra | `platform.ts`, `updater.ts`, `tauri-types.d.ts`, `useToast.tsx`, `useKeyboardShortcuts.ts`, `useRecentFiles.ts`, `ErrorBoundary.tsx`, `LoadingSkeleton.tsx`, `Toast.tsx` | 9 |
+| Shared infra | `updater.ts`, `tauri-types.d.ts`, `useToast.tsx`, `useKeyboardShortcuts.ts`, `useRecentFiles.ts`, `ErrorBoundary.tsx`, `LoadingSkeleton.tsx`, `Toast.tsx`, `platform.ts` | 9 |
 
 \* = diverged but functionally near-identical (whitespace or minor feature differences)
 
 ### 6.2 Diverged files needing reconciliation
 
+**Total diverged: 16 files** (13 functional, 3 whitespace-only)
+
 | File | Divergence | Reconciliation |
 |------|-----------|----------------|
-| `parser/index.ts` | kmd adds `remarkWikilinks` + table wrapper | Merge wikilinks to kmd-ios, or make plugin optional in library |
-| `parser/rehype-copy-button.ts` | Whitespace only | Pick one, no functional change |
+| `parser/index.ts` | kmd adds `remarkWikilinks` + table wrapper | Make wikilinks optional plugin in library |
+| `parser/rehype-copy-button.ts` | Whitespace only (trailing spaces) | Pick one, no functional change |
 | `reader/Reader.tsx` | kmd uses `parseInternalHref()`, kmd-ios inlines | Use kmd version (cleaner API) |
 | `reader/linkPolicy.ts` | kmd adds `parseInternalHref()` | Use kmd version |
-| `reader/codeBlockEnhancements.ts` | Whitespace only | Pick one |
+| `reader/codeBlockEnhancements.ts` | Whitespace only (trailing spaces) | Pick one |
 | `reader/DocumentShell.tsx` | Major mobile divergence | Split: shared base + platform-specific shells |
 | `reader/DocumentShell.css` | Major mobile divergence | Split: shared base + platform-specific CSS |
 | `reader/Reader.css` | iOS-specific adjustments | Split: shared base + platform overrides |
-| `theme.ts` | iOS storage divergence | Adapter pattern for storage |
-| `App.tsx` | Major platform divergence | Not library — stays in product repos |
-| `App.css`, `global.css`, `main.tsx`, `WelcomeScreen.tsx` | Platform-specific | Not library — stays in product repos |
-| `hooks/useDocumentState.ts` | Tauri IPC divergence | Not library — stays in product repos |
+| `theme.ts` | iOS storage divergence | Product shell — not library |
+| `App.tsx` | Major platform divergence | Product shell — not library |
+| `App.css` | Platform-specific | Product shell — not library |
+| `global.css` | Platform-specific | Product shell — not library |
+| `main.tsx` | Platform-specific | Product shell — not library |
+| `WelcomeScreen.tsx` | Platform-specific | Product shell — not library |
+| `hooks/useDocumentState.ts` | Tauri IPC divergence | Product shell — not library |
 | `components/design/DesignCatalog.css` | Minor | Merge or split |
 
 ### 6.3 Target package ownership
 
-| Responsibility | Target package | Rationale |
-|---------------|---------------|-----------|
+Per the North Star layer model (`docs/planning/17-kmd-ecosystem-north-star.md`):
+
+| Responsibility | Target | Rationale |
+|---------------|--------|-----------|
 | Markdown parsing pipeline | `kmd-web` (core) | Pure TS, zero platform deps |
 | Sanitize schema + URL policy | `kmd-web` (core) | Pure TS |
-| Design Mode pipeline (detect/extract/merge/resolve/enrich/IR) | `kmd-web` (core) | Pure TS |
+| Link policy (classify, normalize, parse) | `kmd-web` (core) | Pure TS |
 | HAST utilities | `kmd-web` (core) | Pure TS |
 | Parse cache | `kmd-web` (core) | Pure TS |
-| Worker bridge | `kmd-web/worker` (optional) | Bundler-specific, optional |
-| Shiki highlighting | `kmd-web` (core, lazy) | Lazy-loaded, no deps at import time |
-| Mermaid rendering | `kmd-web` (core, lazy) | Rehype plugin is pure; render step needs DOM |
-| KaTeX CSS | `kmd-web` (core, lazy) | Lazy import |
 | Copy button HAST transform | `kmd-web` (core) | Pure HAST |
-| Wikilinks plugin | `kmd-web` (core) | Pure remark plugin |
-| Link policy (classify, normalize, parse) | `kmd-web` (core) | Pure TS |
-| DOM morphing | `kmd-web` (core, browser) | Pure DOM |
-| Anchor navigation | `kmd-web` (core, browser) | Pure DOM |
-| Code block enhancements | `kmd-web` (core, browser) | Pure DOM |
-| Reader component | `kmd-web/react` | React, needs adapter for platform features |
-| DocumentShell component | `kmd-web/react` | React, needs platform-specific variants |
+| Wikilinks plugin | `kmd-web` (core, optional) | Pure remark plugin |
+| Shiki highlighting (rehype plugin) | `kmd-web` (core, lazy) | Lazy-loaded, no DOM deps at import time |
+| Mermaid rehype plugin (tree transform) | `kmd-web` (core, lazy) | Pure HAST transform |
+| Mermaid render (`renderMermaidPlaceholders`) | `kmd-web/browser` | Requires DOM (querySelector, innerHTML) |
+| KaTeX CSS lazy import | `kmd-web` (core, lazy) | Lazy import |
+| DOM morphing | `kmd-web/browser` | Pure DOM |
+| Anchor navigation | `kmd-web/browser` | Pure DOM |
+| Code block enhancements | `kmd-web/browser` | Pure DOM, clipboard via capability |
+| Worker bridge | `kmd-web/worker` (optional) | Bundler-specific, optional |
+| Reader component | `kmd-web/react` | React, capabilities via context |
+| DocumentShell component | `kmd-web/react` | React, platform-specific variants |
 | Toast system | `kmd-web/react` | React context |
 | ErrorBoundary, LoadingSkeleton | `kmd-web/react` | React |
 | CSS tokens | `kmd-web/styles` | Raw CSS |
 | Reader/DocumentShell styles | `kmd-web/styles` | Raw CSS (shared base) |
-| Design Mode components | `kmd-web/react` (optional) | React + DOM |
-| Showcase theme data | `kmd-web` (core, optional) | Pure TS |
-| Export HTML | `kmd-web` (core, optional) | React + DOM |
-| Image resolution | **Product repo** (adapter) | Tauri IPC — platform-specific |
-| File open/save, recent files | **Product repo** | Tauri IPC — platform-specific |
-| Theme storage | **Product repo** (adapter) | localStorage / iOS storage |
-| App shell (App.tsx, main.tsx) | **Product repo** | Platform-specific |
-| Updater | **Product repo** | Tauri updater |
+| Design Mode components | `kmd-web/design` (optional) | React + DOM |
+| Showcase theme data | `kmd-web/design` (optional) | Pure TS |
+| Export HTML | `kmd-web/design` (optional) | React + DOM |
+| Image resolution | **Product shell** (AssetResolver) | Tauri IPC — platform-specific |
+| File open/save, recent files | **Product shell** | Tauri IPC — platform-specific |
+| Theme storage | **Product shell** | localStorage / iOS storage |
+| App shell (App.tsx, main.tsx) | **Product shell** | Platform-specific |
+| Updater | **Product shell** | Tauri updater |
+| `isTauriRuntime()` | **Product shell** | Runtime detection — not in library |
 | StoreKit / SupportPanel | **kmd-ios only** | iOS-only |
 | Viewport height | **kmd-ios only** | iOS-only |
-| Platform detection (`isTauriRuntime`) | `kmd-web` (core) | Browser global check |
 
 ---
 
@@ -311,29 +328,44 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 | External link rel | `sanitize.ts:rehypeUrlPolicy` | Adds `rel="noopener noreferrer"` to external links. |
 | Sanitize schema | `sanitize.ts:sanitizeSchema` | Extends rehype-sanitize defaults with safe inline HTML tags, KaTeX MathML, Shiki spans, Mermaid SVG. |
 | Link classification | `linkPolicy.ts:classifyRenderedLink()` | Classifies links as fragment/internal/external/blocked. |
-| Internal link resolution | `Reader.tsx:handleInternalLink()` | Resolves via Tauri `resolve_local_path` command. Guards with `isTauriRuntime()`. |
-| External link opening | `Reader.tsx:openExternalLink()` | Opens via Tauri `openUrl` or `window.open`. Never opens in reader WebView. |
-| Image resolution | `resolveAssets.ts:resolveRelativeImages()` | Resolves via Tauri `resolve_asset` command. Skips http/https/data/blob/#/absolute paths. |
+| Internal link resolution | `Reader.tsx:handleInternalLink()` | Resolves via Tauri `resolve_local_path` command. Guards with `isTauriRuntime()`. Replaced by `LinkHandler` capability. |
+| External link opening | `Reader.tsx:openExternalLink()` | Opens via Tauri `openUrl` or `window.open`. Never opens in reader WebView. Replaced by `LinkHandler` capability. |
+| Image resolution | `resolveAssets.ts:resolveRelativeImages()` | Resolves via Tauri `resolve_asset` command. Skips http/https/data/blob/#/absolute paths. Replaced by `AssetResolver` capability. |
 | Raw HTML policy | `sanitize.ts:sanitizeSchema` | Allows: br, kbd, sub, sup, mark, abbr, details, summary, div. Blocks: script, iframe, object, embed, link, meta, style, form, input, button. |
 | Mermaid sandbox | `rehype-mermaid.ts` | No external network, config locked down, render timeout, error fallback. |
 | KaTeX policy | `lazy-katex-css.ts` | No network, unsafe macros disabled (via rehype-katex defaults). |
 
 ### 7.2 Baseline malicious fixtures
 
-| Fixture | Location | Tests |
-|---------|----------|-------|
-| `xss-test.md` | `fixtures/xss-test.md` | javascript: links, vbscript:, data: URIs, file:, HTML event handlers, SVG scripts, nested encoding, object/embed tags |
-| `safe-test.md` | `fixtures/safe-test.md` | Safe links, images, code, tables, task lists, blockquotes, normal HTML |
-| `sanitize.test.ts` | `src/parser/sanitize.test.ts` | 730 tests including: javascript: scheme, mixed case, vbscript:, data: URIs (text/html + SVG), file:, custom schemes, HTML event handlers, raw HTML buttons, rel=noopener, safe link preservation, clobber-safe heading/footnote IDs |
-| `ios-security.test.ts` | `src/parser/ios-security.test.ts` (kmd-ios only) | CSP properties, XSS attack vectors (javascript:, mixed case, vbscript:, data:, SVG onload, file:, custom schemes), bridge isolation (script, iframe, object/embed, srcdoc), remote image policy, controlled handler verification |
+| Fixture | Location | Test count | Tests |
+|---------|----------|------------|-------|
+| `xss-test.md` | `fixtures/xss-test.md` | — | javascript: links, vbscript:, data: URIs, file:, HTML event handlers, SVG scripts, nested encoding, object/embed tags |
+| `safe-test.md` | `fixtures/safe-test.md` | — | Safe links, images, code, tables, task lists, blockquotes, normal HTML |
+| `sanitize.test.ts` | `src/parser/sanitize.test.ts` | 28 tests | `isSafeUrl` unit tests (safe + unsafe URLs), pipeline XSS mitigation (javascript:, mixed case, vbscript:, data: URIs, file:, custom schemes, event handlers, raw HTML buttons, rel=noopener, safe link preservation, clobber-safe IDs) |
+| `ios-security.test.ts` | `src/parser/ios-security.test.ts` (kmd-ios only) | 22 tests | CSP properties, XSS attack vectors (javascript:, mixed case, vbscript:, data:, SVG onload, file:, custom schemes), bridge isolation (script, iframe, object/embed, srcdoc), remote image policy, controlled handler verification |
 
-### 7.3 Security boundaries preventing direct move
+### 7.3 Mermaid post-sanitization DOM insertion — security boundary
 
-1. **Tauri IPC for image resolution** (`resolveAssets.ts`): The `resolve_asset` command reads files through the Rust backend, preventing path traversal. In the library, this must be replaced with an adapter method.
-2. **Tauri IPC for internal link resolution** (`Reader.tsx:handleInternalLink`): The `resolve_local_path` command resolves relative paths safely. In the library, this must be replaced with an adapter method.
-3. **Tauri `openUrl` for external links** (`Reader.tsx:openExternalLink`): Prevents links from opening inside the reader WebView. Non-Tauri fallback uses `window.open`.
+`renderMermaidPlaceholders()` (`rehype-mermaid.ts:57-94`) injects Mermaid's SVG output via `target.innerHTML = result.svg` (line 92) **after** the HTML sanitizer (`rehype-sanitize`) has already run on the parsed HTML. This means:
+
+1. The Mermaid SVG is not re-sanitized by `rehype-sanitize`.
+2. Mermaid's output could theoretically contain unsafe SVG elements (scripts, external references).
+3. The sanitize schema allows SVG elements (`svg`, `path`, `g`, `text`, etc.) because Mermaid needs them, but this also means a compromised Mermaid library could inject arbitrary SVG.
+
+**Required downstream actions:**
+- Document this as a known security boundary in the `kmd-web` library README.
+- Consumers must ensure their CSP blocks inline scripts and external resources (`script-src 'self'`, `img-src 'self' data: blob:`).
+- `renderMermaidPlaceholders()` must be in the browser runtime layer (not core) so it is clear this is a DOM-level security surface.
+- Future work: re-sanitize Mermaid SVG output before injecting, or use a dedicated SVG sanitizer.
+- Add a test that renders a Mermaid diagram and verifies no `<script>` tags survive in the output.
+
+### 7.4 Security boundaries preventing direct move
+
+1. **Tauri IPC for image resolution** (`resolveAssets.ts`): The `resolve_asset` command reads files through the Rust backend, preventing path traversal. In the library, this is replaced by the `AssetResolver` capability.
+2. **Tauri IPC for internal link resolution** (`Reader.tsx:handleInternalLink`): The `resolve_local_path` command resolves relative paths safely. In the library, this is replaced by the `LinkHandler` capability.
+3. **Tauri `openUrl` for external links** (`Reader.tsx:openExternalLink`): Prevents links from opening inside the reader WebView. Non-Tauri fallback uses `window.open`. Replaced by `LinkHandler` capability.
 4. **CSP enforcement** (platform-level, not code): The CSP is set by Tauri/Rust config, not by the TypeScript code. The library cannot enforce CSP — consumers must set their own.
-5. **`isTauriRuntime()` guard** (`platform.ts`): Checks `"__TAURI_INTERNALS__" in window`. This is a browser global check, not a Tauri import. Safe for the library.
+5. **Mermaid post-sanitization insertion** (see §7.3): `renderMermaidPlaceholders()` injects SVG after sanitization. This is a known security boundary requiring downstream testing and CSP enforcement.
 
 ---
 
@@ -345,7 +377,7 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 |---------|--------|
 | `npm test` | **35 test files, 730 tests, all passed.** Duration: 46.45s. |
 | `npx tsc -b --noEmit` | **Clean (exit 0).** No TypeScript errors. |
-| `npm run build` | Timeout (Rust/Tauri compilation required, not frontend-only). Frontend build via Vite requires Tauri context. |
+| `npm run build` | **Succeeded** (`tsc -b && vite build`). Builds frontend bundle with Vite. Does not require Rust/Tauri compilation or a live Tauri context. Emits bundle-size warnings for large chunks (shiki, mermaid, katex). |
 
 ### 8.2 kmd-ios
 
@@ -357,33 +389,42 @@ This is entirely platform-specific and must be replaced by an adapter method (`a
 ### 8.3 Test count delta
 
 kmd-ios has 3 additional test files (40 more tests) compared to kmd:
-- `src/parser/ios-security.test.ts` — iOS WebView security audit
-- `src/utils/viewportHeight.test.ts` — iOS viewport height
-- `src/hooks/useSupportPrompt.test.ts` — iOS support prompt
+- `src/parser/ios-security.test.ts` — 22 tests (iOS WebView security audit)
+- `src/utils/viewportHeight.test.ts` — 2 tests (iOS viewport height)
+- `src/hooks/useSupportPrompt.test.ts` — 16 tests (iOS support prompt)
 
-### 8.4 Fixture count
+### 8.4 Test counts for security-related files
+
+| Test file | Repo | Test count |
+|-----------|------|------------|
+| `src/parser/sanitize.test.ts` | kmd (shared) | 28 tests |
+| `src/parser/ios-security.test.ts` | kmd-ios only | 22 tests |
+
+### 8.5 Fixture count
 
 | Repo | Fixtures | Count |
 |------|----------|-------|
 | kmd | `fixtures/` directory | 20 files (including design-mode subdirectory) |
 | kmd-ios | Same `fixtures/` directory | 20 files (identical to kmd) |
 
-### 8.5 Dependency graph
+### 8.6 Dependency graph
 
-**Shared dependencies** (identical in both repos):
+**Shared dependencies** (present in both repos, identical versions):
 - `unified`, `remark-parse`, `remark-gfm`, `remark-math`, `remark-github-alerts`, `remark-rehype`
 - `rehype-katex`, `rehype-raw`, `rehype-sanitize`, `rehype-slug`, `rehype-stringify`
 - `shiki`, `katex`, `mermaid`
 - `react`, `react-dom`
 - `js-yaml`, `unist-util-visit`
 
-**kmd-only dependencies**:
-- `@tauri-apps/api`, `@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-opener`, `@tauri-apps/plugin-process`, `@tauri-apps/plugin-updater`
+**Tauri dependencies** (present in both repos):
+- `@tauri-apps/api` — both repos
+- `@tauri-apps/plugin-dialog` — both repos
+- `@tauri-apps/plugin-opener` — both repos
+- `@tauri-apps/plugin-process` — both repos
+- `@tauri-apps/plugin-updater` — both repos
+- `@tauri-apps/plugin-fs` — **kmd-ios only** (for iOS file system access)
 
-**kmd-ios additional dependencies**:
-- All of kmd's Tauri deps PLUS `@tauri-apps/plugin-fs` (for iOS file system access)
-
-**Dev dependencies** (identical): `@tauri-apps/cli`, `@types/*`, `@vitejs/plugin-react`, `jsdom`, `typescript`, `vite`, `vitest`
+**Dev dependencies** (identical in both repos): `@tauri-apps/cli`, `@types/*`, `@vitejs/plugin-react`, `jsdom`, `typescript`, `vite`, `vitest`
 
 ---
 

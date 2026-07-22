@@ -25,6 +25,10 @@ Researched: 2026-05-07
 | `12-test-plan-fixtures.md` | Test matrix and fixture list |
 | `14-sample-doc-showcase.md` | Markdown feature showcase for testing the renderer |
 | `16-references.md` | Curated source list |
+| `17-kmd-ecosystem-north-star.md` | Binding architecture for kmd-web library extraction |
+| `18-kmd-web-implementation-plan.md` | Phase-by-phase extraction and migration plan |
+| `19-kmd-web-library-research.md` | Original library research (superseded by 17) |
+| `20-kmd-web-extraction-inventory.md` | File-by-file extraction inventory and coupling evidence |
 
 ## Executive decision
 
