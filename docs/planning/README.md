@@ -25,6 +25,8 @@ Researched: 2026-05-07
 | `12-test-plan-fixtures.md` | Test matrix and fixture list |
 | `14-sample-doc-showcase.md` | Markdown feature showcase for testing the renderer |
 | `16-references.md` | Curated source list |
+| `17-kmd-ecosystem-north-star.md` | Long-term repository, package, ownership, security, and feature-propagation direction for the kmd family |
+| `18-kmd-web-implementation-plan.md` | Phased, dependency-aware execution plan for extracting and adopting `kmd-web` |
 
 ## Executive decision
 
