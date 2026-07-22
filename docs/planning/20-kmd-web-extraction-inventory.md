@@ -427,6 +427,31 @@ kmd-ios has 3 additional test files (40 more tests) compared to kmd:
 
 **Dev dependencies** (identical in both repos): `@tauri-apps/cli`, `@types/*`, `@vitejs/plugin-react`, `jsdom`, `typescript`, `vite`, `vitest`
 
+### 8.7 Visual and benchmark baseline limitations
+
+KWEB-001 changes documentation only and does not alter a rendered screen. Neither
+repository contains canonical reader screenshots suitable for a durable before/
+after comparison, so no screenshot is presented as extraction evidence. The
+visual baseline must be created from packed `kmd-web` artifacts in KWEB-017,
+where desktop and narrow-width images can be generated reproducibly and compared
+in CI. Treating an ad hoc welcome-screen capture as parser parity evidence would
+be misleading.
+
+There is likewise no parser benchmark command in either repository today. The
+repeatable executable baselines available at extraction time are:
+
+```powershell
+Measure-Command { npm test }
+Measure-Command { npm run build }
+```
+
+KWEB-018 creates the benchmark harness and representative small, 1 MB,
+code-heavy, diagram-heavy, design-heavy, and pathological fixtures defined by
+the North Star. Until then, the timed test/build results above are observations,
+not parser-performance budgets. Independent merge review on 2026-07-23 reran
+the desktop suite (730/730 tests in 6.13 seconds) and production build (9.83
+seconds); both passed.
+
 ---
 
 ## 9. No unexplained files
