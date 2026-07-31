@@ -309,9 +309,9 @@ const detection = detectDesignDocument(content);
 ### React
 
 ```tsx
-import { MarkdownReader } from 'kmd-web/react';
-import 'kmd-web/styles/tokens.css';
-import 'kmd-web/styles/reader.css';
+import { MarkdownReader } from '@axis-love/kmd-web/react';
+import '@axis-love/kmd-web/styles/tokens.css';
+import '@axis-love/kmd-web/styles/reader.css';
 
 function App() {
   return (
@@ -344,9 +344,9 @@ reader.addEventListener('kmd:link-click', (e) => {
 ### Vanilla JS (no framework, no Web Component)
 
 ```javascript
-import { parseMarkdown } from 'kmd-web';
-import 'kmd-web/styles/tokens.css';
-import 'kmd-web/styles/reader.css';
+import { parseMarkdown } from '@axis-love/kmd-web';
+import '@axis-love/kmd-web/styles/tokens.css';
+import '@axis-love/kmd-web/styles/reader.css';
 
 const { html, outline } = await parseMarkdown(content);
 document.querySelector('#reader').innerHTML = html;
@@ -515,14 +515,14 @@ Given:
 
 ```bash
 # React users
-npm install kmd-web
+npm install @axis-love/kmd-web
 
 # Vanilla JS users (no React needed)
-npm install kmd-web
-# import from 'kmd-web/web' instead of 'kmd-web/react'
+npm install @axis-love/kmd-web
+# import from '@axis-love/kmd-web/web' instead of '@axis-love/kmd-web/react'
 
 # CDN (no install)
-<script type="module" src="https://esm.sh/kmd-web/web"></script>
+<script type="module" src="https://esm.sh/@axis-love/kmd-web/web"></script>
 ```
 
 ---

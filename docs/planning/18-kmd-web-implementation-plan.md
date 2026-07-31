@@ -57,11 +57,11 @@ Tauri/browser coupling and security-sensitive seams are explicitly identified.
 
 ### KWEB-002 — Provision the public repository and distribution identity
 
-Using Nyx's existing GitHub access, create the public GitHub repository and
-protect the default branch. Re-check `kmd-web` package-name availability and
-record the distribution choice; npm account setup and publication are not
-required during repository provisioning. Do not publish an empty placeholder
-package.
+Using Nyx's existing GitHub access, create the public GitHub repository at
+`axis-love/kmd-web` and protect the default branch. Re-check the scoped npm
+name `@axis-love/kmd-web` and record the distribution choice; npm account setup
+and publication are not required during repository provisioning. Do not publish
+an empty placeholder package.
 
 Exit gate: agents can clone/push branches and CI can later publish through a
 credential-minimizing trusted workflow.

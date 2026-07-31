@@ -61,21 +61,21 @@ renderer.
 ## Product and package naming
 
 - The product family is always `kmd`, lowercase.
-- The public web repository and convenience npm package are `kmd-web`.
+- The public web repository is `axis-love/kmd-web` on GitHub.
+- The npm packages are published under the `@axis-love` scope as `@axis-love/kmd-web`.
 - The unrelated npm package named `kmd` is not part of this project.
 - Public imports use explicit, stable entry points rather than internal files.
-- If separate packages become necessary, they live under an npm organization
-  controlled by the project. Do not invent a scope before ownership is set up.
+- Sub-packages live under the `@axis-love` npm organization controlled by the project.
 
-The intended simple installation remains:
+The intended simple installation:
 
 ```bash
-npm install kmd-web
+npm install @axis-love/kmd-web
 ```
 
 ```tsx
-import { MarkdownReader } from "kmd-web/react";
-import "kmd-web/styles.css";
+import { MarkdownReader } from "@axis-love/kmd-web/react";
+import "@axis-love/kmd-web/styles.css";
 ```
 
 Advanced consumers can import only the engine or browser surface they need.
