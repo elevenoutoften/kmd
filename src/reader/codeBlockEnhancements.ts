@@ -1,6 +1,8 @@
+import { createClipboardProvider } from "@/adapter/kmdWebAdapter";
+
 export function enhanceCodeBlocks(
   container: HTMLElement,
-  onCopy: (message: string) => void
+  onCopy: (message: string) => void,
 ): void {
   container.querySelectorAll("pre code span[style]").forEach((el) => {
     (el as HTMLElement).title = "Click to copy";
@@ -63,34 +65,13 @@ export function removeCodeBlockEnhancements(container: HTMLElement): void {
 }
 
 function copyToClipboard(text: string, onCopy: (message: string) => void): void {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        onCopy("Copied to clipboard");
-      })
-      .catch(() => {
-        fallbackCopy(text, onCopy);
-      });
-  } else {
-    fallbackCopy(text, onCopy);
-  }
-}
-
-function fallbackCopy(text: string, onCopy: (message: string) => void): void {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  
-  try {
-    document.execCommand("copy");
-    onCopy("Copied to clipboard");
-  } catch {
-    onCopy("Failed to copy");
-  }
-  
-  document.body.removeChild(textarea);
+  const provider = createClipboardProvider();
+  provider
+    .writeText(text)
+    .then(() => {
+      onCopy("Copied to clipboard");
+    })
+    .catch(() => {
+      onCopy("Failed to copy");
+    });
 }

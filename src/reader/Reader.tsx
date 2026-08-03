@@ -15,7 +15,7 @@ import {
   parseInternalHref,
 } from "./linkPolicy";
 import { enhanceCodeBlocks, removeCodeBlockEnhancements } from "./codeBlockEnhancements";
-import { isTauriRuntime } from "@/utils/platform";
+import { createLinkHandler, type LinkHandler } from "@/adapter/kmdWebAdapter";
 import { useToast } from "@/hooks/useToast";
 import "./Reader.css";
 
@@ -25,73 +25,14 @@ interface ReaderProps {
   onOpenDocument?: (path: string) => void;
 }
 
-async function openExternalLink(href: string): Promise<void> {
-  const externalHref = normalizeExternalHref(href);
-  const tauriRuntime = isTauriRuntime();
-
-  try {
-    if (tauriRuntime) {
-      const { openUrl } = await import("@tauri-apps/plugin-opener");
-      await openUrl(externalHref);
-      return;
-    }
-  } catch {
-    if (tauriRuntime) {
-      return;
-    }
-  }
-
-  window.open(externalHref, "_blank", "noopener,noreferrer");
-}
-
-async function handleInternalLink(
-  href: string,
-  filePath: string | null,
-  onOpenDocument?: (path: string) => void
-): Promise<{ openPath: string | null; fragment: string | null }> {
-  if (!filePath || !isTauriRuntime()) {
-    return { openPath: null, fragment: null };
-  }
-
-  const { path: pathPart, fragment } = parseInternalHref(href);
-
-  if (!pathPart) {
-    return { openPath: null, fragment };
-  }
-
-  try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const resolved = await invoke<{ absolute_path: string; is_dir: boolean }>(
-      "resolve_local_path",
-      { docPath: filePath, relativePath: pathPart },
-    );
-
-    if (resolved.is_dir) {
-      const { openPath } = await import("@tauri-apps/plugin-opener");
-      await openPath(resolved.absolute_path);
-      return { openPath: null, fragment: null };
-    }
-
-    const ext = resolved.absolute_path.toLowerCase();
-    const isMarkdown = ext.endsWith(".md") || ext.endsWith(".markdown");
-
-    if (isMarkdown && onOpenDocument) {
-      return { openPath: resolved.absolute_path, fragment };
-    }
-
-    if (!isMarkdown) {
-      const { openPath } = await import("@tauri-apps/plugin-opener");
-      await openPath(resolved.absolute_path);
-    }
-
-    return { openPath: null, fragment: null };
-  } catch (err) {
-    console.error("Failed to resolve internal link:", err);
-    return { openPath: null, fragment: null };
-  }
-}
-
 export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
+  // Keep filePath and onOpenDocument in refs so the link handler (created
+  // once) always reads the latest values without recreating on every render.
+  const filePathRef = useRef(filePath);
+  filePathRef.current = filePath;
+  const onOpenDocumentRef = useRef(onOpenDocument);
+  onOpenDocumentRef.current = onOpenDocument;
+  const pendingFragmentRef = useRef<string | null>(null);
   const [html, setHtml] = useState("");
   const [outline, setOutline] = useState<OutlineEntry[]>([]);
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
@@ -104,7 +45,6 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
   const [documentEpoch, setDocumentEpoch] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
   const prevContentRef = useRef(content);
-  const pendingFragmentRef = useRef<string | null>(null);
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
@@ -299,6 +239,21 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     }
   }, [html, scrollToFragment]);
 
+  // Create the link handler once. It reads filePath and onOpenDocument
+  // from refs so it doesn't need to be recreated on every render.
+  const linkHandler = useRef<LinkHandler | null>(null);
+  if (!linkHandler.current) {
+    linkHandler.current = createLinkHandler({
+      getDocPath: () => filePathRef.current,
+      onOpenDocument: (path, anchor) => {
+        if (anchor) {
+          pendingFragmentRef.current = anchor;
+        }
+        onOpenDocumentRef.current?.(path);
+      },
+    });
+  }
+
   const handleLinkClick = useCallback((e: MouseEvent) => {
     const anchor = (e.target as HTMLElement).closest("a");
     if (!anchor) return;
@@ -309,15 +264,18 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     if (action === "internal") {
       e.preventDefault();
       e.stopPropagation();
-      void (async () => {
-        const result = await handleInternalLink(href, filePath, onOpenDocument);
-        if (result.openPath && onOpenDocument) {
-          if (result.fragment) {
-            pendingFragmentRef.current = result.fragment;
-          }
-          onOpenDocument(result.openPath);
-        }
-      })();
+      const { path: pathPart, fragment } = parseInternalHref(href);
+      if (!pathPart) {
+        // Fragment-only internal link — scroll in-page.
+        if (fragment) scrollToFragment(fragment);
+        return;
+      }
+      // The link handler resolves through Rust and calls onOpenDocument
+      // for Markdown files, or opens dirs/non-Markdown via the OS handler.
+      void linkHandler.current?.openDocument({
+        href: pathPart,
+        anchor: fragment ?? undefined,
+      });
       return;
     }
 
@@ -327,9 +285,10 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     if (action === "fragment") {
       scrollToFragment(getFragmentIdFromHref(href));
     } else if (action === "external") {
-      void openExternalLink(href);
+      const externalHref = normalizeExternalHref(href);
+      void linkHandler.current?.openExternal(new URL(externalHref));
     }
-  }, [scrollToFragment, filePath, onOpenDocument]);
+  }, [scrollToFragment]);
 
   useEffect(() => {
     const el = bodyRef.current;

@@ -1,21 +1,16 @@
-import { isTauriRuntime } from "@/utils/platform";
 import { RAW_IMAGE_SRC_ATTR } from "./domMorph";
-
-interface AssetData {
-  mime_type: string;
-  bytes_base64: string;
-}
+import { createAssetResolver } from "@/adapter/kmdWebAdapter";
 
 export async function resolveRelativeImages(
   container: HTMLElement,
-  docPath: string
+  docPath: string,
 ): Promise<void> {
-  if (!isTauriRuntime() || !docPath) return;
+  if (!docPath) return;
 
   const images = container.querySelectorAll<HTMLImageElement>("img[src]");
   if (images.length === 0) return;
 
-  const { invoke } = await import("@tauri-apps/api/core");
+  const resolver = createAssetResolver();
 
   const tasks: Promise<void>[] = [];
 
@@ -38,19 +33,22 @@ export async function resolveRelativeImages(
     }
 
     tasks.push(
-      invoke<AssetData>("resolve_asset", {
-        docPath,
-        relativePath: src,
-      })
-        .then((data) => {
+      resolver
+        .resolveAsset({
+          url: src,
+          type: "image",
+          documentBase: docPath,
+        })
+        .then((resolved) => {
           // Keep the Markdown-authored src around so DOM morphing can tell
           // a resolved image apart from genuinely changed content.
           img.setAttribute(RAW_IMAGE_SRC_ATTR, src);
-          img.src = `data:${data.mime_type};base64,${data.bytes_base64}`;
+          img.src = resolved.url;
         })
         .catch(() => {
-          // Leave the original src if resolution fails
-        })
+          // Leave the original src if resolution fails.
+          // The adapter does not expose paths in the error.
+        }),
     );
   }
 

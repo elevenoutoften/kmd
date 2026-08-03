@@ -1,21 +1,20 @@
 import { parseMarkdown, type ParseResult } from "./index";
 import { getCachedParseResult, setCachedParseResult } from "./parse-cache";
+import { createWorkerFactory, type WorkerLike } from "@/adapter/kmdWebAdapter";
 
 interface PendingRequest {
   resolve: (result: ParseResult) => void;
   reject: (error: Error) => void;
 }
 
-let worker: Worker | null = null;
+let worker: WorkerLike | null = null;
 const pending = new Map<number, PendingRequest>();
 let nextId = 0;
 
-function getWorker(): Worker {
+function getWorker(): WorkerLike {
   if (!worker) {
-    worker = new Worker(
-      new URL("./parse-worker.ts", import.meta.url),
-      { type: "module" }
-    );
+    const factory = createWorkerFactory();
+    worker = factory.createWorker();
     worker.addEventListener("message", handleWorkerMessage);
     worker.addEventListener("error", handleWorkerError);
   }
