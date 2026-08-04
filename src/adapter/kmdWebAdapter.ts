@@ -8,11 +8,8 @@
 // handling, clipboard, worker creation). No other file under src/reader/
 // or src/parser/ should import @tauri-apps/* for reader concerns.
 //
-// Pinned kmd-web version: 0.1.0 (private prerelease, not yet on npm).
-// When @axis-love/browser is published, replace the local interface
-// definitions below with:
-//   import type { HostCapabilities, AssetResolver, ... } from "@axis-love/browser";
-//   import type { AssetRequest, ResolvedAsset, DocumentTarget } from "@axis-love/contracts";
+// Types are imported from @axis-love/kmd-web (the convenience package)
+// which re-exports from @axis-love/contracts and @axis-love/browser.
 //
 // Rust ownership is preserved: path traversal enforcement, file permission
 // decisions, and URL policy all stay in the Rust backend. The adapter only
@@ -20,89 +17,38 @@
 // by Rust. It does NOT implement path validation itself.
 
 import { isTauriRuntime } from "@/utils/platform";
+import type {
+  AssetRequest,
+  AssetResolver,
+  ClipboardProvider,
+  DocumentTarget,
+  HostCapabilities,
+  LinkHandler,
+  ResolvedAsset,
+  WorkerFactory,
+  WorkerRenderRequest,
+  WorkerRenderResponse,
+} from "@axis-love/kmd-web";
+
+// Re-export the types that other kmd source files may need
+export type {
+  AssetRequest,
+  AssetResolver,
+  ClipboardProvider,
+  DocumentTarget,
+  HostCapabilities,
+  LinkHandler,
+  ResolvedAsset,
+  WorkerFactory,
+  WorkerRenderRequest,
+  WorkerRenderResponse,
+};
 
 // ---------------------------------------------------------------------------
 // kmd-web version pin
 // ---------------------------------------------------------------------------
 
 export const KMD_WEB_VERSION = "0.1.0";
-
-// ---------------------------------------------------------------------------
-// Contract types (matching @axis-love/contracts 0.1.0)
-// ---------------------------------------------------------------------------
-
-export type AssetType = "image" | "video" | "audio" | "other";
-
-export interface AssetRequest {
-  readonly url: string;
-  readonly type: AssetType;
-  readonly documentBase?: string;
-}
-
-export interface ResolvedAsset {
-  readonly url: string;
-  readonly originalUrl: string;
-  readonly cached?: boolean;
-}
-
-export interface DocumentTarget {
-  readonly href: string;
-  readonly anchor?: string;
-  readonly title?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Capability interfaces (matching @axis-love/browser 0.1.0)
-// ---------------------------------------------------------------------------
-
-export interface AssetResolver {
-  resolveAsset(request: AssetRequest): Promise<ResolvedAsset>;
-}
-
-export interface LinkHandler {
-  openExternal(url: URL): Promise<void>;
-  openDocument(target: DocumentTarget): Promise<void>;
-}
-
-export interface ClipboardProvider {
-  writeText(value: string): Promise<void>;
-}
-
-export interface WorkerRenderRequest {
-  readonly id: number;
-  readonly source: string;
-  readonly options?: unknown;
-}
-
-export type WorkerRenderResponse =
-  | { readonly type: "result"; readonly id: number; readonly result: unknown }
-  | { readonly type: "error"; readonly id: number; readonly error: string };
-
-export interface WorkerLike {
-  postMessage(message: unknown): void;
-  addEventListener(
-    type: "message",
-    listener: (event: MessageEvent) => void,
-  ): void;
-  addEventListener(type: "error", listener: (event: ErrorEvent) => void): void;
-  removeEventListener(
-    type: "message",
-    listener: (event: MessageEvent) => void,
-  ): void;
-  removeEventListener(type: "error", listener: (event: ErrorEvent) => void): void;
-  terminate(): void;
-}
-
-export interface WorkerFactory {
-  createWorker(): WorkerLike;
-}
-
-export interface HostCapabilities {
-  readonly assetResolver?: AssetResolver;
-  readonly linkHandler?: LinkHandler;
-  readonly clipboardProvider?: ClipboardProvider;
-  readonly workerFactory?: WorkerFactory;
-}
 
 // ---------------------------------------------------------------------------
 // Tauri command result types (matching Rust structs in src-tauri/src/commands.rs)
@@ -116,6 +62,32 @@ interface AssetData {
 interface ResolvedLocalPath {
   absolute_path: string;
   is_dir: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// WorkerLike — local helper interface for the Worker Factory
+// ---------------------------------------------------------------------------
+
+/**
+ * A worker instance that satisfies the kmd-web WorkerFactory interface.
+ * Standard Web Workers have postMessage, addEventListener, removeEventListener,
+ * and terminate. The kmd-web WorkerFactory interface only requires postMessage,
+ * addEventListener, and terminate — the extra removeEventListener is structurally
+ * compatible.
+ */
+interface WorkerLike {
+  postMessage(message: WorkerRenderRequest): void;
+  addEventListener(
+    type: "message",
+    listener: (event: MessageEvent<WorkerRenderResponse>) => void,
+  ): void;
+  addEventListener(type: "error", listener: (event: ErrorEvent) => void): void;
+  removeEventListener(
+    type: "message",
+    listener: (event: MessageEvent<WorkerRenderResponse>) => void,
+  ): void;
+  removeEventListener(type: "error", listener: (event: ErrorEvent) => void): void;
+  terminate(): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -281,14 +253,18 @@ export function createClipboardProvider(): ClipboardProvider {
 // ---------------------------------------------------------------------------
 
 /**
- * Creates the Markdown parse worker using Tauri's WebView Worker support.
+ * Creates the Markdown render worker using Tauri's WebView Worker support.
  * The worker is a standard ES module worker — Tauri's WebView handles it
  * natively. The factory returns a WorkerLike that satisfies the kmd-web
  * WorkerFactory interface.
+ *
+ * The worker uses the kmd-web WorkerBridge protocol: it receives
+ * {id, source, options} messages and responds with
+ * {type: "result", id, result} or {type: "error", id, error}.
  */
 export function createWorkerFactory(): WorkerFactory {
   return {
-    createWorker(): WorkerLike {
+    createWorker(): WorkerFactory["createWorker"] extends () => infer T ? T : never {
       const worker = new Worker(
         new URL("../parser/parse-worker.ts", import.meta.url),
         { type: "module" },

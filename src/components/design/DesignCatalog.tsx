@@ -1,11 +1,11 @@
 import { useEffect, type ReactElement } from "react";
-import type { OutlineEntry } from "@/parser";
+import type { OutlineEntry } from "@axis-love/kmd-web";
 import type {
   ColorToken,
   ComponentRecipe,
   DesignDocument,
   TypographyToken,
-} from "@/parser/design";
+} from "@axis-love/design";
 import {
   buildShowcaseCSS,
   collectDesignFontFamilyNames,
@@ -443,11 +443,11 @@ function TypographySpecimen({
 
 export function catalogOutline(doc: DesignDocument): OutlineEntry[] {
   const sections: OutlineEntry[] = [];
-  sections.push({ id: "showcase-tokens", text: "Tokens", level: 1 });
-  sections.push({ id: "showcase-components", text: "Components", level: 1 });
+  sections.push({ slug: "showcase-tokens", text: "Tokens", level: 1 });
+  sections.push({ slug: "showcase-components", text: "Components", level: 1 });
   const colorTokens = doc.spec.colorTokens ?? [];
   if (colorTokens.length > 0) {
-    sections.push({ id: "showcase-inventory", text: "Inventory", level: 1 });
+    sections.push({ slug: "showcase-inventory", text: "Inventory", level: 1 });
   }
   return sections;
 }

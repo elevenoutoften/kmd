@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
-import type { OutlineEntry } from "../parser";
-import { findAnchorTarget, scrollContainerToTarget } from "./anchorNavigation";
+import type { OutlineEntry } from "@axis-love/kmd-web";
+import { findAnchorTarget, scrollContainerToTarget } from "@axis-love/browser";
 import "./DocumentShell.css";
 
 interface DocumentShellProps {
@@ -46,14 +46,14 @@ export function DocumentShell({ outline, activeId, children, onAnchorClick }: Do
         <div className="outline-title">Outline</div>
         <ul className="outline-list">
           {outline.map((entry) => (
-            <li key={entry.id}>
+            <li key={entry.slug}>
               <a
-                href={`#${entry.id}`}
-                className={`outline-item${entry.id === activeId ? " active" : ""}`}
+                href={`#${entry.slug}`}
+                className={`outline-item${entry.slug === activeId ? " active" : ""}`}
                 data-depth={outlineDepth(entry.level)}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleOutlineClick(entry.id);
+                  handleOutlineClick(entry.slug);
                 }}
               >
                 {entry.text}

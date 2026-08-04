@@ -4,7 +4,7 @@ import { Toast } from "@/components/Toast";
 import { ToastProvider, useToast } from "@/hooks/useToast";
 import { getInitialTheme, applyTheme, toggleTheme, type Theme } from "@/theme";
 import { Reader } from "@/reader/Reader";
-import { detectDesignDocumentCheap } from "@/parser/design/detectCheap";
+import { detectDesignDocumentCheap } from "@axis-love/design";
 import { checkForAppUpdates } from "@/updater";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
@@ -251,7 +251,7 @@ function AppInner() {
         exportPath = exportHtml.ensureHtmlPath(selectedPath);
       }
 
-      const { runDesignPipelineCached } = await import("@/parser/design");
+      const { runDesignPipelineCached } = await import("@axis-love/design");
       const doc = runDesignPipelineCached(content);
 
       if (isTauriRuntime() && exportPath) {

@@ -2,7 +2,7 @@ import type {
   ColorToken,
   ComponentRecipe,
   DesignDocument,
-} from "@/parser/design";
+} from "@axis-love/design";
 
 type NyxVar = string;
 

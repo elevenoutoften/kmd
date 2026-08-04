@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { DesignDocument } from "@/parser/design";
+import type { DesignDocument } from "@axis-love/design";
 import {
   buildGoogleFontStylesheetUrl,
   collectDesignFontFamilyNames,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import SHOPVIBE from "../../../fixtures/shopvibe-DESIGN.md?raw";
-import { runDesignPipelineCached, type DesignDocument } from "../../parser/design";
+import { runDesignPipelineCached, type DesignDocument } from "@axis-love/design";
 import {
   buildDesignCatalogHtml,
   ensureHtmlFilename,

@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { runDesignPipelineCached } from "../../parser/design";
-import type { DesignDocument } from "../../parser/design";
+import { runDesignPipelineCached } from "@axis-love/design";
+import type { DesignDocument } from "@axis-love/design";
 import APPLE from "../../../fixtures/apple-DESIGN.md?raw";
 import DYLAN from "../../../fixtures/dylanbrouwer-DESIGN.md?raw";
 import SHOPVIBE from "../../../fixtures/shopvibe-DESIGN.md?raw";

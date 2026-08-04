@@ -1,22 +1,9 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from "react";
-import { parseMarkdown, type OutlineEntry } from "@/parser";
-import { parseMarkdownInWorker } from "@/parser/parse-worker-bridge";
-import { getCachedParseResult, evictCachedParseResult } from "@/parser/parse-cache";
-import { renderMermaidPlaceholders } from "@/parser/rehype-mermaid";
-import { ensureKatexCss } from "@/parser/lazy-katex-css";
-import { resolveRelativeImages } from "./resolveAssets";
-import { morphMarkdownBody } from "./domMorph";
-import { DocumentShell } from "./DocumentShell";
-import { findAnchorTarget, scrollContainerToTarget } from "./anchorNavigation";
-import {
-  classifyRenderedLink,
-  getFragmentIdFromHref,
-  normalizeExternalHref,
-  parseInternalHref,
-} from "./linkPolicy";
-import { enhanceCodeBlocks, removeCodeBlockEnhancements } from "./codeBlockEnhancements";
-import { createLinkHandler, type LinkHandler } from "@/adapter/kmdWebAdapter";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import { BrowserReader } from "@axis-love/browser";
+import type { HostCapabilities, OutlineEntry } from "@axis-love/kmd-web";
+import { createKmdWebAdapter } from "@/adapter/kmdWebAdapter";
 import { useToast } from "@/hooks/useToast";
+import { DocumentShell } from "@/reader/DocumentShell";
 import "./Reader.css";
 
 interface ReaderProps {
@@ -26,224 +13,30 @@ interface ReaderProps {
 }
 
 export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
-  // Keep filePath and onOpenDocument in refs so the link handler (created
+  // Keep filePath and onOpenDocument in refs so the adapter (created
   // once) always reads the latest values without recreating on every render.
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
   const onOpenDocumentRef = useRef(onOpenDocument);
   onOpenDocumentRef.current = onOpenDocument;
   const pendingFragmentRef = useRef<string | null>(null);
-  const [html, setHtml] = useState("");
   const [outline, setOutline] = useState<OutlineEntry[]>([]);
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-  // Full-parse HTML waiting to be merged into the already-painted quick parse.
-  const [pendingFullHtml, setPendingFullHtml] = useState<string | null>(null);
-  // Bumped whenever the rendered DOM changes outside of React (morph).
-  const [domVersion, setDomVersion] = useState(0);
   // Bumped when the first HTML for a freshly opened document commits.
   const [documentEpoch, setDocumentEpoch] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const prevContentRef = useRef(content);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const readerRef = useRef<BrowserReader | null>(null);
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
-  useEffect(() => {
-    if (prevContentRef.current !== content && prevContentRef.current) {
-      evictCachedParseResult(prevContentRef.current);
-      prevContentRef.current = content;
-    }
-  }, [content]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let fullDone = false;
-    let quickShown = false;
-    setError(null);
-    setPendingFullHtml(null);
-
-    const cached = getCachedParseResult(content);
-    if (cached) {
-      setHtml(cached.html);
-      setOutline(cached.outline);
-      setDocumentEpoch((epoch) => epoch + 1);
-      if (cached.hasMath) ensureKatexCss();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    parseMarkdown(content, { skipShiki: true, skipMermaid: true })
-      .then((quick) => {
-        if (cancelled || fullDone) return;
-        quickShown = true;
-        setHtml(quick.html);
-        setOutline(quick.outline);
-        setDocumentEpoch((epoch) => epoch + 1);
-        if (quick.hasMath) ensureKatexCss();
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      });
-
-    parseMarkdownInWorker(content)
-      .then((full) => {
-        if (cancelled) return;
-        fullDone = true;
-        setOutline(full.outline);
-        if (full.hasMath) ensureKatexCss();
-        if (quickShown) {
-          // The quick parse is on screen; patch in the differences (mostly
-          // highlighted code blocks) instead of re-rendering everything.
-          setPendingFullHtml(full.html);
-        } else {
-          setHtml(full.html);
-          setDocumentEpoch((epoch) => epoch + 1);
-        }
-      })
-      .catch(() => {
-        // Full parse failure is non-fatal; quick parse result is already shown.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [content]);
-
-  useEffect(() => {
-    if (pendingFullHtml === null) return;
-
-    const body = bodyRef.current;
-    if (body && morphMarkdownBody(body, pendingFullHtml)) {
-      setDomVersion((version) => version + 1);
-    }
-    setPendingFullHtml(null);
-  }, [pendingFullHtml]);
-
-  // Start each newly opened document at the top, in the same frame its
-  // content first paints.
-  useLayoutEffect(() => {
-    if (documentEpoch === 0) return;
-    const scrollContainer = bodyRef.current?.closest<HTMLElement>(".mdr-doc");
-    if (scrollContainer) {
-      scrollContainer.scrollTop = 0;
-    }
-  }, [documentEpoch]);
-
-  useEffect(() => {
-    if (html && bodyRef.current) {
-      renderMermaidPlaceholders(bodyRef.current);
-    }
-  }, [html, domVersion]);
-
-  useEffect(() => {
-    if (!html || !bodyRef.current || !filePath) return;
-    void resolveRelativeImages(bodyRef.current, filePath);
-  }, [html, filePath, domVersion]);
-
-  useEffect(() => {
-    // Keep the current position when an outline refresh (e.g. the full
-    // parse landing) still contains the active heading.
-    setActiveId((previous) =>
-      previous !== undefined && outline.some((entry) => entry.id === previous)
-        ? previous
-        : outline[0]?.id,
-    );
-  }, [outline]);
-
-  useEffect(() => {
-    const body = bodyRef.current;
-    const scrollContainer = body?.closest<HTMLElement>(".mdr-doc");
-    if (!body || !scrollContainer || outline.length === 0) return;
-
-    let frame: number | null = null;
-
-    const updateActiveHeading = () => {
-      frame = null;
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const threshold = containerRect.top + 96;
-      let current = outline[0]?.id;
-
-      for (const entry of outline) {
-        const target = findAnchorTarget(body, entry.id);
-        if (!target) continue;
-
-        if (target.getBoundingClientRect().top <= threshold) {
-          current = entry.id;
-        } else {
-          break;
-        }
-      }
-
-      setActiveId((previous) => (previous === current ? previous : current));
-    };
-
-    const scheduleUpdate = () => {
-      if (frame !== null) return;
-      frame = window.requestAnimationFrame(updateActiveHeading);
-    };
-
-    updateActiveHeading();
-    scrollContainer.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", scheduleUpdate);
-
-    return () => {
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
-      scrollContainer.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", scheduleUpdate);
-    };
-  }, [html, outline]);
-
-  useEffect(() => {
-    if (!html || !bodyRef.current) return;
-
-    const timer = window.setTimeout(() => {
-      if (bodyRef.current) {
-        enhanceCodeBlocks(bodyRef.current, (message) => {
-          toastRef.current(message, { type: "success" });
-        });
-      }
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timer);
-      if (bodyRef.current) {
-        removeCodeBlockEnhancements(bodyRef.current);
-      }
-    };
-  }, [html, domVersion]);
-
-  const scrollToFragment = useCallback((fragmentId: string | null) => {
-    if (!fragmentId || !bodyRef.current) {
-      return;
-    }
-
-    const target = findAnchorTarget(bodyRef.current, fragmentId);
-    const scrollContainer = bodyRef.current.closest<HTMLElement>(".mdr-doc");
-    if (target && scrollContainer) {
-      scrollContainerToTarget(scrollContainer, target);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!html || !bodyRef.current) return;
-    const fragment = pendingFragmentRef.current;
-    if (fragment) {
-      pendingFragmentRef.current = null;
-      window.setTimeout(() => scrollToFragment(fragment), 50);
-    }
-  }, [html, scrollToFragment]);
-
-  // Create the link handler once. It reads filePath and onOpenDocument
-  // from refs so it doesn't need to be recreated on every render.
-  const linkHandler = useRef<LinkHandler | null>(null);
-  if (!linkHandler.current) {
-    linkHandler.current = createLinkHandler({
+  // Create the HostCapabilities bundle once. It reads filePath and
+  // onOpenDocument from refs so it doesn't need to be recreated.
+  const capabilitiesRef = useRef<HostCapabilities | null>(null);
+  if (!capabilitiesRef.current) {
+    capabilitiesRef.current = createKmdWebAdapter({
       getDocPath: () => filePathRef.current,
       onOpenDocument: (path, anchor) => {
         if (anchor) {
@@ -254,48 +47,107 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     });
   }
 
-  const handleLinkClick = useCallback((e: MouseEvent) => {
-    const anchor = (e.target as HTMLElement).closest("a");
-    if (!anchor) return;
-    const href = anchor.getAttribute("href");
-    if (!href) return;
-    const action = classifyRenderedLink(href);
+  // Create the BrowserReader once on mount and dispose on unmount.
+  useEffect(() => {
+    const container = bodyRef.current;
+    if (!container) return;
 
-    if (action === "internal") {
-      e.preventDefault();
-      e.stopPropagation();
-      const { path: pathPart, fragment } = parseInternalHref(href);
-      if (!pathPart) {
-        // Fragment-only internal link — scroll in-page.
-        if (fragment) scrollToFragment(fragment);
-        return;
+    // Find the scroll container (the .mdr-doc element).
+    const scrollContainer = container.closest<HTMLElement>(".mdr-doc") ?? undefined;
+    scrollContainerRef.current = scrollContainer ?? null;
+
+    const reader = new BrowserReader({
+      container,
+      scrollContainer,
+      capabilities: capabilitiesRef.current ?? undefined,
+      onOutlineChange: (newOutline) => {
+        setOutline([...newOutline]);
+      },
+      onActiveHeadingChange: (slug) => {
+        setActiveId(slug);
+      },
+      onCopy: (message) => {
+        toastRef.current(message, { type: "success" });
+      },
+      onError: (err) => {
+        setError(err.message);
+      },
+      onRendered: () => {
+        setDocumentEpoch((epoch) => epoch + 1);
+      },
+    });
+
+    readerRef.current = reader;
+
+    return () => {
+      reader.dispose();
+      readerRef.current = null;
+    };
+  }, []);
+
+  // Update the document when content changes.
+  useEffect(() => {
+    const reader = readerRef.current;
+    if (!reader) return;
+
+    if (content === "") {
+      setError(null);
+      setOutline([]);
+      if (bodyRef.current) {
+        bodyRef.current.innerHTML = "";
       }
-      // The link handler resolves through Rust and calls onOpenDocument
-      // for Markdown files, or opens dirs/non-Markdown via the OS handler.
-      void linkHandler.current?.openDocument({
-        href: pathPart,
-        anchor: fragment ?? undefined,
-      });
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    setError(null);
 
-    if (action === "fragment") {
-      scrollToFragment(getFragmentIdFromHref(href));
-    } else if (action === "external") {
-      const externalHref = normalizeExternalHref(href);
-      void linkHandler.current?.openExternal(new URL(externalHref));
+    reader
+      .update(content)
+      .then(() => {
+        // Success — outline and DOM are handled by callbacks.
+      })
+      .catch((err: unknown) => {
+        // BrowserReader's onError callback already handles error state.
+        // The catch here is a safety net for any rejection that escapes
+        // the reader's own error handling.
+        if (err instanceof Error && err.message === "superseded") return;
+        const e = err instanceof Error ? err : new Error(String(err));
+        setError(e.message);
+      });
+  }, [content]);
+
+  // Start each newly opened document at the top, in the same frame its
+  // content first paints.
+  useLayoutEffect(() => {
+    if (documentEpoch === 0) return;
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
     }
-  }, [scrollToFragment]);
+  }, [documentEpoch]);
 
+  // Scroll to a pending fragment after the document renders.
   useEffect(() => {
-    const el = bodyRef.current;
-    if (!el) return;
-    el.addEventListener("click", handleLinkClick, true);
-    return () => el.removeEventListener("click", handleLinkClick, true);
-  }, [handleLinkClick]);
+    if (documentEpoch === 0) return;
+    const fragment = pendingFragmentRef.current;
+    if (fragment) {
+      pendingFragmentRef.current = null;
+      window.setTimeout(() => {
+        const reader = readerRef.current;
+        if (reader) {
+          reader.scrollToFragment(fragment);
+        }
+      }, 50);
+    }
+  }, [documentEpoch]);
+
+  const scrollToFragment = useCallback((fragmentId: string | null) => {
+    if (!fragmentId) return;
+    const reader = readerRef.current;
+    if (reader) {
+      reader.scrollToFragment(fragmentId);
+    }
+  }, []);
 
   if (error) {
     return (
@@ -317,19 +169,9 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     );
   }
 
-  // React 19 rewrites innerHTML whenever the dangerouslySetInnerHTML object
-  // identity changes, so an inline `{{ __html }}` would rebuild the whole
-  // document DOM on every unrelated re-render (scroll spy, outline updates).
-  // Memoize the payload so innerHTML is only written when the HTML changes.
-  const htmlPayload = useMemo(() => ({ __html: html }), [html]);
-
   return (
     <DocumentShell outline={outline} activeId={activeId} onAnchorClick={scrollToFragment}>
-      <div
-        ref={bodyRef}
-        className="mdr-body"
-        dangerouslySetInnerHTML={htmlPayload}
-      />
+      <div ref={bodyRef} className="mdr-body" />
     </DocumentShell>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runDesignPipeline } from "../../parser/design/pipeline";
-import { detectDesignDocumentCheap } from "../../parser/design/detectCheap";
+import { runDesignPipeline } from "@axis-love/design";
+import { detectDesignDocumentCheap } from "@axis-love/design";
 import { buildShowcaseCSS } from "./showcaseTheme";
 import APPLE from "../../../samples/apple-DESIGN.md?raw";
 import SHOPVIBE from "../../../samples/shopvibe-DESIGN.md?raw";

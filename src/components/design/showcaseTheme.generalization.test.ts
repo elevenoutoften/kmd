@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runDesignPipeline } from "../../parser/design/pipeline";
+import { runDesignPipeline } from "@axis-love/design";
 import { buildShowcaseCSS, parseColor, isColorDark } from "./showcaseTheme";
 import MIXED_SURFACES from "../../../fixtures/design-mode/synthetic-mixed-surfaces.md?raw";
 import DARK_ONLY from "../../../fixtures/design-mode/synthetic-dark-only.md?raw";

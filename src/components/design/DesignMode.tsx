@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { runDesignPipelineCached } from "@/parser/design";
+import { runDesignPipelineCached } from "@axis-love/design";
 import { DesignCatalog } from "./DesignCatalog";
 import "./DesignCatalog.css";
 

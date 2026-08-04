@@ -19,8 +19,8 @@ import {
   isTextLikeToken,
   isPaletteAccentToken,
 } from "./showcaseTheme";
-import type { ColorToken, ComponentRecipe, DesignDocument } from "@/parser/design";
-import { runDesignPipelineCached } from "@/parser/design";
+import type { ColorToken, ComponentRecipe, DesignDocument } from "@axis-love/design";
+import { runDesignPipelineCached } from "@axis-love/design";
 import APPLE from "../../../fixtures/apple-DESIGN.md?raw";
 import DYLAN from "../../../fixtures/dylanbrouwer-DESIGN.md?raw";
 import SHOPVIBE from "../../../fixtures/shopvibe-DESIGN.md?raw";

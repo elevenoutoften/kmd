@@ -1,35 +1,26 @@
-import { parseMarkdown } from "./index";
+// src/parser/parse-worker.ts
+//
+// Web Worker that renders Markdown using the kmd-web core render function.
+// Uses the kmd-web WorkerBridge protocol:
+//   Receives: { id, source, options } (WorkerRenderRequest)
+//   Responds: { type: "result", id, result } or { type: "error", id, error }
+//
+// The worker imports render() from @axis-love/core which is DOM-free and
+// safe to run in a Worker context.
 
-interface WorkerRequest {
-  type: "parse";
-  content: string;
-  id: number;
-}
+import { render } from "@axis-love/core";
+import type { RenderOptions, RenderResult } from "@axis-love/contracts";
+import type { WorkerRenderRequest, WorkerRenderResponse } from "@axis-love/kmd-web";
 
-interface WorkerSuccess {
-  type: "result";
-  id: number;
-  result: { html: string; outline: Array<{ text: string; level: number; id: string }>; hasMath: boolean };
-}
-
-interface WorkerError {
-  type: "error";
-  id: number;
-  error: string;
-}
-
-type WorkerResponse = WorkerSuccess | WorkerError;
-
-self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
-  const { type, content, id } = e.data;
-  if (type !== "parse") return;
+self.onmessage = async (e: MessageEvent<WorkerRenderRequest>) => {
+  const { id, source, options } = e.data;
 
   try {
-    const result = await parseMarkdown(content);
-    const response: WorkerResponse = { type: "result", id, result };
+    const result: RenderResult = await render(source, options as RenderOptions | undefined);
+    const response: WorkerRenderResponse = { type: "result", id, result };
     self.postMessage(response);
   } catch (err) {
-    const response: WorkerResponse = {
+    const response: WorkerRenderResponse = {
       type: "error",
       id,
       error: err instanceof Error ? err.message : String(err),

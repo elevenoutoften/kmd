@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 import { DocumentShell } from "./DocumentShell";
-import type { OutlineEntry } from "../parser";
+import type { OutlineEntry } from "@axis-love/kmd-web";
 
 const reactHookState = vi.hoisted(() => ({
   showOutline: true,
@@ -25,8 +25,8 @@ vi.mock("react", async (importOriginal) => {
 });
 
 const outline: OutlineEntry[] = [
-  { id: "intro", text: "Intro", level: 1 },
-  { id: "details", text: "Details", level: 2 },
+  { slug: "intro", text: "Intro", level: 1 },
+  { slug: "details", text: "Details", level: 2 },
 ];
 
 describe("DocumentShell", () => {
@@ -47,12 +47,12 @@ describe("DocumentShell", () => {
 
   it("computes outline depth from heading level", () => {
     const deep: OutlineEntry[] = [
-      { id: "title", text: "Title", level: 1 },
-      { id: "section", text: "Section", level: 2 },
-      { id: "subsection", text: "Sub", level: 3 },
-      { id: "deep", text: "Deep", level: 4 },
-      { id: "deeper", text: "Deeper", level: 5 },
-      { id: "deep6", text: "Deep6", level: 6 },
+      { slug: "title", text: "Title", level: 1 },
+      { slug: "section", text: "Section", level: 2 },
+      { slug: "subsection", text: "Sub", level: 3 },
+      { slug: "deep", text: "Deep", level: 4 },
+      { slug: "deeper", text: "Deeper", level: 5 },
+      { slug: "deep6", text: "Deep6", level: 6 },
     ];
     const html = renderToStaticMarkup(
       <DocumentShell outline={deep}>
