@@ -4,6 +4,7 @@ import type { HostCapabilities, OutlineEntry } from "@axis-love/kmd-web";
 import { createKmdWebAdapter } from "@/adapter/kmdWebAdapter";
 import { useToast } from "@/hooks/useToast";
 import { DocumentShell } from "@/reader/DocumentShell";
+import "@axis-love/styles/styles.css";
 import "./Reader.css";
 
 interface ReaderProps {
@@ -151,7 +152,7 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
 
   if (error) {
     return (
-      <div className="mdr-error">
+      <div className="mdr-error kmd-reader">
         <h2>Parse Error</h2>
         <p>{error}</p>
         <pre><code>{content}</code></pre>
@@ -162,7 +163,7 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
   if (content === "" && filePath !== null) {
     return (
       <DocumentShell outline={outline} activeId={activeId} onAnchorClick={scrollToFragment}>
-        <div ref={bodyRef} className="mdr-body">
+        <div ref={bodyRef} className="mdr-body kmd-reader">
           <p className="mdr-empty">This file is empty.</p>
         </div>
       </DocumentShell>
@@ -171,7 +172,7 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
 
   return (
     <DocumentShell outline={outline} activeId={activeId} onAnchorClick={scrollToFragment}>
-      <div ref={bodyRef} className="mdr-body" />
+      <div ref={bodyRef} className="mdr-body kmd-reader" />
     </DocumentShell>
   );
 }
