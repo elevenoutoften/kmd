@@ -1,9 +1,9 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { BrowserReader } from "@axis-love/browser";
 import type { HostCapabilities, OutlineEntry } from "@axis-love/kmd-web";
+import { DocumentShell } from "@axis-love/kmd-web/react";
 import { createKmdWebAdapter } from "@/adapter/kmdWebAdapter";
 import { useToast } from "@/hooks/useToast";
-import { DocumentShell } from "@/reader/DocumentShell";
 import "@axis-love/styles/styles.css";
 import "./Reader.css";
 
@@ -53,8 +53,8 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
     const container = bodyRef.current;
     if (!container) return;
 
-    // Find the scroll container (the .mdr-doc element).
-    const scrollContainer = container.closest<HTMLElement>(".mdr-doc") ?? undefined;
+    // Find the scroll container (the .kmd-doc element rendered by DocumentShell).
+    const scrollContainer = container.closest<HTMLElement>(".kmd-doc") ?? undefined;
     scrollContainerRef.current = scrollContainer ?? null;
 
     const reader = new BrowserReader({
