@@ -6,119 +6,13 @@
  * The .mdr-body element carries both classes so existing tests and DOM
  * queries continue to work.
  *
- * This file contains ONLY:
- *   1. Token bridge — maps app --kmd-* vars to the app's existing
- *      unprefixed token system so the package CSS resolves against the
- *      app's [data-theme] selectors.
- *   2. App-specific overrides that differ from package defaults.
+ * Token values come from @axis-love/styles/tokens.css via src/tokens.css.
+ * The package CSS reads its --kmd-* variables straight off :root, so no
+ * token bridge is needed here — see src/tokens.css for the alias layer.
+ *
+ * This file contains ONLY app-specific overrides that differ from the
+ * package defaults.
  */
-
-/* ---------------------------------------------------------------------------
- * Token bridge — app unprefixed tokens → package --kmd-* expectations
- *
- * The app defines colors/spacing/typography via unprefixed custom properties
- * (e.g. --color-primary, --space-xs) in tokens.css, scoped under [data-theme].
- * @axis-love/styles references --kmd-* prefixed variables. This bridge lets
- * the package CSS resolve against the app's existing theme system without
- * duplicating token values.
- *
- * Override points: to change any package value, set the --kmd-* variable
- * here (or in a theme selector) to a different value. For example:
- *   .mdr-body { --kmd-color-link: var(--color-info); }
- * --------------------------------------------------------------------------- */
-
-.mdr-body,
-.mdr-error {
-  /* Colors */
-  --kmd-color-primary: var(--color-primary);
-  --kmd-color-secondary: var(--color-secondary);
-  --kmd-color-tertiary: var(--color-tertiary);
-  --kmd-color-neutral: var(--color-neutral);
-  --kmd-color-surface: var(--color-surface);
-  --kmd-color-surface-muted: var(--color-surface-muted);
-  --kmd-color-on-primary: var(--color-on-primary);
-  --kmd-color-on-surface: var(--color-on-surface);
-  --kmd-color-border: var(--color-border);
-  --kmd-color-info: var(--color-info);
-  --kmd-color-success: var(--color-success);
-  --kmd-color-warning: var(--color-warning);
-  --kmd-color-danger: var(--color-danger);
-  --kmd-color-code-bg: var(--color-code-bg);
-  --kmd-color-code-text: var(--color-code-text);
-  --kmd-color-blockquote-border: var(--color-blockquote-border);
-  --kmd-color-blockquote-text: var(--color-blockquote-text);
-  --kmd-color-table-border: var(--color-table-border);
-  --kmd-color-table-header-bg: var(--color-table-header-bg);
-  --kmd-color-link: var(--color-link);
-  --kmd-color-link-hover: var(--color-link-hover);
-  --kmd-color-selection-bg: var(--color-selection-bg);
-  --kmd-color-scrollbar-thumb: var(--color-scrollbar-thumb);
-  --kmd-color-scrollbar-track: var(--color-scrollbar-track);
-  --kmd-color-outline-depth-0: var(--outline-depth-0-color);
-  --kmd-color-outline-depth-1: var(--outline-depth-1-color);
-  --kmd-color-outline-depth-2: var(--outline-depth-2-color);
-  --kmd-color-outline-depth-3: var(--outline-depth-3-color);
-  --kmd-color-outline-active-bg: var(--outline-active-bg);
-  --kmd-color-outline-active-border: var(--outline-active-border);
-  --kmd-color-heading: var(--color-primary);
-  --kmd-color-body: var(--color-on-surface);
-  --kmd-color-muted: var(--color-secondary);
-  --kmd-color-accent: var(--color-tertiary);
-  --kmd-color-background: var(--color-neutral);
-  --kmd-color-card: var(--color-surface);
-
-  /* Typography */
-  --kmd-font-body: var(--font-body);
-  --kmd-font-mono: var(--font-mono);
-  --kmd-font-size-headline-lg: var(--font-size-headline-lg);
-  --kmd-font-size-headline-md: var(--font-size-headline-md);
-  --kmd-font-size-h3: var(--font-size-h3);
-  --kmd-font-size-h4: var(--font-size-h4);
-  --kmd-font-size-h5: var(--font-size-h5);
-  --kmd-font-size-h6: var(--font-size-h6);
-  --kmd-font-size-body-md: var(--font-size-body-md);
-  --kmd-font-size-body-sm: var(--font-size-body-sm);
-  --kmd-font-size-code-md: var(--font-size-code-md);
-  --kmd-font-size-label-caps: var(--font-size-label-caps);
-
-  --kmd-font-weight-headline-lg: var(--font-weight-headline-lg);
-  --kmd-font-weight-headline-md: var(--font-weight-headline-md);
-  --kmd-font-weight-label-caps: var(--font-weight-label-caps);
-
-  --kmd-line-height-headline-lg: var(--line-height-headline-lg);
-  --kmd-line-height-headline-md: var(--line-height-headline-md);
-  --kmd-line-height-body-md: var(--line-height-body-md);
-  --kmd-line-height-body-sm: var(--line-height-body-sm);
-  --kmd-line-height-code-md: var(--line-height-code-md);
-
-  --kmd-letter-spacing-label-caps: var(--letter-spacing-label-caps);
-
-  /* Radius */
-  --kmd-radius-sm: var(--radius-sm);
-  --kmd-radius-md: var(--radius-md);
-  --kmd-radius-lg: var(--radius-lg);
-  --kmd-radius-xl: var(--radius-xl);
-  --kmd-radius-full: var(--radius-full);
-
-  /* Spacing */
-  --kmd-space-xs: var(--space-xs);
-  --kmd-space-sm: var(--space-sm);
-  --kmd-space-md: var(--space-md);
-  --kmd-space-lg: var(--space-lg);
-  --kmd-space-xl: var(--space-xl);
-  --kmd-space-xxl: var(--space-xxl);
-
-  /* Layout */
-  --kmd-width-content-max: var(--content-max-width);
-  --kmd-width-toolbar-height: var(--toolbar-height);
-  --kmd-width-sidebar-width: var(--sidebar-width);
-  --kmd-width-toggle-width: var(--toggle-width);
-
-  /* Focus */
-  --kmd-focus-outline-width: 2px;
-  --kmd-focus-outline-style: solid;
-  --kmd-focus-outline-color: var(--color-tertiary);
-}
 
 /* ---------------------------------------------------------------------------
  * App-specific overrides

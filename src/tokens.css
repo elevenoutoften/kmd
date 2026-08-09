@@ -1,121 +1,108 @@
+/*
+ * kmd desktop — design tokens
+ *
+ * This file defines NO token values. Every value comes from
+ * @axis-love/styles/tokens.css, which is the single source of truth for the
+ * kmd design system (colors, typography, radii, spacing, layout). The package
+ * ships [data-theme="dark"] / [data-theme="light"] selectors that already match
+ * the attribute this app sets on <html> (see src/theme.ts), so importing it is
+ * all that is needed to activate a theme.
+ *
+ * The block below is a pure alias layer: it maps the package's --kmd-* names
+ * onto the unprefixed names this app's own CSS (App.css, global.css,
+ * WelcomeScreen.css, LoadingSkeleton.css, DesignCatalog.css) has always used.
+ * Because each alias is a var() reference rather than a copied literal, a
+ * change to a package token value propagates here with no edit to this file.
+ *
+ * The aliases live on :root, and <html> is also the element carrying
+ * [data-theme], so each var() resolves against the active theme's values.
+ *
+ * To override a package value for this app, redeclare the --kmd-* variable
+ * (not the unprefixed alias) so both names stay in sync.
+ */
+
+@import "@axis-love/styles/tokens.css";
+
 :root {
-  /* Typography tokens from DESIGN.md */
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+  /* Typography */
+  --font-body: var(--kmd-font-body);
+  --font-mono: var(--kmd-font-mono);
 
-  --font-size-headline-lg: 34px;
-  --font-size-headline-md: 24px;
-  --font-size-body-md: 17px;
-  --font-size-body-sm: 14px;
-  --font-size-code-md: 14px;
-  --font-size-label-caps: 12px;
+  --font-size-headline-lg: var(--kmd-font-size-headline-lg);
+  --font-size-headline-md: var(--kmd-font-size-headline-md);
+  --font-size-h3: var(--kmd-font-size-h3);
+  --font-size-h4: var(--kmd-font-size-h4);
+  --font-size-h5: var(--kmd-font-size-h5);
+  --font-size-h6: var(--kmd-font-size-h6);
+  --font-size-body-md: var(--kmd-font-size-body-md);
+  --font-size-body-sm: var(--kmd-font-size-body-sm);
+  --font-size-code-md: var(--kmd-font-size-code-md);
+  --font-size-label-caps: var(--kmd-font-size-label-caps);
 
-  --font-weight-headline-lg: 700;
-  --font-weight-headline-md: 650;
-  --font-weight-label-caps: 650;
+  --font-weight-headline-lg: var(--kmd-font-weight-headline-lg);
+  --font-weight-headline-md: var(--kmd-font-weight-headline-md);
+  --font-weight-label-caps: var(--kmd-font-weight-label-caps);
 
-  --line-height-headline-lg: 1.12;
-  --line-height-headline-md: 1.2;
-  --line-height-body-md: 1.62;
-  --line-height-body-sm: 1.5;
-  --line-height-code-md: 1.55;
+  --line-height-headline-lg: var(--kmd-line-height-headline-lg);
+  --line-height-headline-md: var(--kmd-line-height-headline-md);
+  --line-height-body-md: var(--kmd-line-height-body-md);
+  --line-height-body-sm: var(--kmd-line-height-body-sm);
+  --line-height-code-md: var(--kmd-line-height-code-md);
 
-  --letter-spacing-label-caps: 0.08em;
+  --letter-spacing-label-caps: var(--kmd-letter-spacing-label-caps);
 
-  /* Rounded tokens */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+  /* Radius */
+  --radius-sm: var(--kmd-radius-sm);
+  --radius-md: var(--kmd-radius-md);
+  --radius-lg: var(--kmd-radius-lg);
+  --radius-xl: var(--kmd-radius-xl);
+  --radius-full: var(--kmd-radius-full);
 
-  /* Spacing tokens */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 36px;
-  --space-xxl: 56px;
+  /* Spacing */
+  --space-xs: var(--kmd-space-xs);
+  --space-sm: var(--kmd-space-sm);
+  --space-md: var(--kmd-space-md);
+  --space-lg: var(--kmd-space-lg);
+  --space-xl: var(--kmd-space-xl);
+  --space-xxl: var(--kmd-space-xxl);
 
   /* Layout */
-  --content-max-width: 800px;
-  --toolbar-height: 48px;
-  --sidebar-width: 240px;
-  --toggle-width: 20px;
-  --font-size-h3: 20px;
-  --font-size-h4: 17px;
-  --font-size-h5: 14px;
-  --font-size-h6: 14px;
-}
+  --content-max-width: var(--kmd-width-content-max);
+  --toolbar-height: var(--kmd-width-toolbar-height);
+  --sidebar-width: var(--kmd-width-sidebar-width);
+  --toggle-width: var(--kmd-width-toggle-width);
 
-/* ---- Dark theme (default) ---- */
-[data-theme="dark"] {
-  --color-primary: #e8eaed;
-  --color-secondary: #9aa0ab;
-  --color-tertiary: #9b6dff;
-  --color-neutral: #1a1c1f;
-  --color-surface: #222428;
-  --color-surface-muted: #2c2f35;
-  --color-on-primary: #1a1c1f;
-  --color-on-surface: #e8eaed;
-  --color-border: #3a3f48;
-  --color-info: #5b9cf5;
-  --color-success: #3ebd82;
-  --color-warning: #d4a735;
-  --color-danger: #e8594e;
+  /* Colors — resolve against the active [data-theme] on <html> */
+  --color-primary: var(--kmd-color-primary);
+  --color-secondary: var(--kmd-color-secondary);
+  --color-tertiary: var(--kmd-color-tertiary);
+  --color-neutral: var(--kmd-color-neutral);
+  --color-surface: var(--kmd-color-surface);
+  --color-surface-muted: var(--kmd-color-surface-muted);
+  --color-on-primary: var(--kmd-color-on-primary);
+  --color-on-surface: var(--kmd-color-on-surface);
+  --color-border: var(--kmd-color-border);
+  --color-info: var(--kmd-color-info);
+  --color-success: var(--kmd-color-success);
+  --color-warning: var(--kmd-color-warning);
+  --color-danger: var(--kmd-color-danger);
 
-  --color-code-bg: #2c2f35;
-  --color-code-text: #e8eaed;
-  --color-blockquote-border: #3a3f48;
-  --color-blockquote-text: #9aa0ab;
-  --color-table-border: #3a3f48;
-  --color-table-header-bg: #2c2f35;
-  --color-link: #9b6dff;
-  --color-link-hover: #b794ff;
-  --color-selection-bg: rgba(155, 109, 255, 0.3);
-  --color-scrollbar-thumb: #3a3f48;
-  --color-scrollbar-track: transparent;
+  --color-code-bg: var(--kmd-color-code-bg);
+  --color-code-text: var(--kmd-color-code-text);
+  --color-blockquote-border: var(--kmd-color-blockquote-border);
+  --color-blockquote-text: var(--kmd-color-blockquote-text);
+  --color-table-border: var(--kmd-color-table-border);
+  --color-table-header-bg: var(--kmd-color-table-header-bg);
+  --color-link: var(--kmd-color-link);
+  --color-link-hover: var(--kmd-color-link-hover);
+  --color-selection-bg: var(--kmd-color-selection-bg);
+  --color-scrollbar-thumb: var(--kmd-color-scrollbar-thumb);
+  --color-scrollbar-track: var(--kmd-color-scrollbar-track);
 
-  --outline-depth-0-color: var(--color-on-surface);
-  --outline-depth-1-color: var(--color-on-surface);
-  --outline-depth-2-color: var(--color-secondary);
-  --outline-depth-3-color: #6b7280;
-  --outline-active-bg: rgba(155, 109, 255, 0.12);
-  --outline-active-border: var(--color-tertiary);
-}
-
-/* ---- Light theme ---- */
-[data-theme="light"] {
-  --color-primary: #15171a;
-  --color-secondary: #626872;
-  --color-tertiary: #7c4dff;
-  --color-neutral: #f5f7f8;
-  --color-surface: #ffffff;
-  --color-surface-muted: #eceff3;
-  --color-on-primary: #ffffff;
-  --color-on-surface: #15171a;
-  --color-border: #d8dee6;
-  --color-info: #2563eb;
-  --color-success: #0f8a5f;
-  --color-warning: #b7791f;
-  --color-danger: #b42318;
-
-  --color-code-bg: #eceff3;
-  --color-code-text: #15171a;
-  --color-blockquote-border: #d8dee6;
-  --color-blockquote-text: #626872;
-  --color-table-border: #d8dee6;
-  --color-table-header-bg: #eceff3;
-  --color-link: #7c4dff;
-  --color-link-hover: #9b6dff;
-  --color-selection-bg: rgba(124, 77, 255, 0.15);
-  --color-scrollbar-thumb: #d8dee6;
-  --color-scrollbar-track: transparent;
-
-  --outline-depth-0-color: var(--color-on-surface);
-  --outline-depth-1-color: var(--color-on-surface);
-  --outline-depth-2-color: var(--color-secondary);
-  --outline-depth-3-color: #808890;
-  --outline-active-bg: rgba(124, 77, 255, 0.1);
-  --outline-active-border: var(--color-tertiary);
+  --outline-depth-0-color: var(--kmd-color-outline-depth-0);
+  --outline-depth-1-color: var(--kmd-color-outline-depth-1);
+  --outline-depth-2-color: var(--kmd-color-outline-depth-2);
+  --outline-depth-3-color: var(--kmd-color-outline-depth-3);
+  --outline-active-bg: var(--kmd-color-outline-active-bg);
+  --outline-active-border: var(--kmd-color-outline-active-border);
 }
