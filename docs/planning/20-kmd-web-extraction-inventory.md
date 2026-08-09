@@ -3,6 +3,8 @@
 > Evidence-backed map of every production file under `kmd/src/parser`, `kmd/src/reader`, shared design components/styles, and the corresponding `kmd-ios` areas. Produced as the baseline for extracting a reusable `kmd-web` library.
 >
 > Revised v2 (2026-07-22): corrected build result, diverged counts, dependency labeling, security-surface inventory, and module classifications to align with the North Star (`docs/planning/17-kmd-ecosystem-north-star.md`).
+>
+> Revised v3 (2026-08-09, KWEB-047): recorded the Design Mode presentation decision. `DesignCatalog.tsx`, `DesignMode.tsx`, `exportHtml.ts`, `showcaseTheme.ts`, and `DesignCatalog.css` are **not** extracted — design *presentation* is an explicit host integration, and `@axis-love/design` ships the data pipeline plus an export contract instead. §3.2, §6.1, and §6.3 updated accordingly.
 
 ## Method
 
@@ -160,6 +162,13 @@ This is entirely platform-specific and is replaced by the `AssetResolver` capabi
 | `showcaseTheme.ts` | **Optional design** | Showcase theme data. Pure TS. |
 | `DesignCatalog.css` | **Optional design (styles)** | Design catalog styles. |
 
+> **KWEB-047 (2026-08-09) — these five files stay host-side.** The classification
+> above describes what the modules *are*, not where they end up. All five are
+> presentation: a React catalog UI, its stylesheet, a 2,288-line showcase theme
+> that encodes the kmd look, and a `renderToStaticMarkup` HTML writer. They are
+> owned by each product shell (kmd desktop, kmd-ios), not by `@axis-love/design`.
+> See §6.3 for the decision and its rationale.
+
 ---
 
 ## 4. Shared infrastructure inventory
@@ -236,7 +245,12 @@ This is entirely platform-specific and is replaced by the `AssetResolver` capabi
 
 ## 6. Coupling summary table
 
-### 6.1 Identical shared files (portable as-is)
+### 6.1 Identical shared files
+
+"Identical" here means byte-comparable between `kmd` and `kmd-ios`. Most such
+files are portable as-is into a `kmd-web` package; the rows marked † are
+identical across the two products but deliberately stay in the product shells —
+see §6.3.
 
 | Area | Files | Count |
 |------|-------|-------|
@@ -249,10 +263,12 @@ This is entirely platform-specific and is replaced by the `AssetResolver` capabi
 | Reader product shell | `resolveAssets.ts` | 1 |
 | Reader React | `DocumentShell.tsx`*, `Reader.tsx`* | 2 |
 | Styles | `tokens.css`, `Reader.css`*, `DocumentShell.css`* | 3 |
-| Design components | `DesignCatalog.tsx`, `DesignMode.tsx`, `exportHtml.ts`, `showcaseTheme.ts`, `DesignCatalog.css`* | 5 |
+| Design presentation † | `DesignCatalog.tsx`, `DesignMode.tsx`, `exportHtml.ts`, `showcaseTheme.ts`, `DesignCatalog.css`* | 5 |
 | Shared infra | `updater.ts`, `tauri-types.d.ts`, `useToast.tsx`, `useKeyboardShortcuts.ts`, `useRecentFiles.ts`, `ErrorBoundary.tsx`, `LoadingSkeleton.tsx`, `Toast.tsx`, `platform.ts` | 9 |
 
 \* = diverged but functionally near-identical (whitespace or minor feature differences)
+
+† = identical across products but **not** extracted — presentation stays host-side (KWEB-047, §6.3)
 
 ### 6.2 Diverged files needing reconciliation
 
@@ -304,9 +320,11 @@ Per the North Star layer model (`docs/planning/17-kmd-ecosystem-north-star.md`):
 | ErrorBoundary, LoadingSkeleton | `kmd-web/react` | React |
 | CSS tokens | `kmd-web/styles` | Raw CSS |
 | Reader/DocumentShell styles | `kmd-web/styles` | Raw CSS (shared base) |
-| Design Mode components | `kmd-web/design` (optional) | React + DOM |
-| Showcase theme data | `kmd-web/design` (optional) | Pure TS |
-| Export HTML | `kmd-web/design` (optional) | React + DOM |
+| Design extraction pipeline (detect → extract → merge → resolve → enrich, IR, validation) | `kmd-web/design` (optional) | Pure TS, DOM-free |
+| Design HTML export **contract** (`DesignHtmlExportBuilder`, `escapeHtml`, filename helpers) | `kmd-web/design` (optional) | Pure TS; the host supplies the renderer |
+| Design Mode components (`DesignCatalog.tsx`, `DesignMode.tsx`) | **Product shell** | Presentation — React + DOM; see §6.3.1 |
+| Showcase theme data (`showcaseTheme.ts`) | **Product shell** | Presentation — encodes the product's catalog look; see §6.3.1 |
+| Export HTML renderer (`exportHtml.ts`) | **Product shell** | Presentation — `renderToStaticMarkup` + stylesheet scraping; see §6.3.1 |
 | Image resolution | **Product shell** (AssetResolver) | Tauri IPC — platform-specific |
 | File open/save, recent files | **Product shell** | Tauri IPC — platform-specific |
 | Theme storage | **Product shell** | localStorage / iOS storage |
@@ -315,6 +333,54 @@ Per the North Star layer model (`docs/planning/17-kmd-ecosystem-north-star.md`):
 | `isTauriRuntime()` | **Product shell** | Runtime detection — not in library |
 | StoreKit / SupportPanel | **kmd-ios only** | iOS-only |
 | Viewport height | **kmd-ios only** | iOS-only |
+
+### 6.3.1 Design Mode presentation: explicit host integration (KWEB-047)
+
+**Decision (2026-08-09): doctrine, not extraction.** `@axis-love/design` owns the
+*data* — detection, the five-stage extraction pipeline, the IR, caching, and
+validation — plus a *contract* for HTML export. Every product renders that data
+itself. The v1/v2 rows that assigned catalog UI, showcase theme, and HTML export
+to `kmd-web/design` were aspirational and never shipped; the rows above now match
+what exists.
+
+Where the line falls today:
+
+| Concern | Owner | Surface |
+|---------|-------|---------|
+| `DesignDocument` / `DesignSpec` IR | `@axis-love/design` | `runDesignPipeline`, `runDesignPipelineCached` |
+| Design-mode summaries and token probes | `@axis-love/design` | `hasDesignTokens`, `parseProseDesignSpec`, `summarizeMarkdownForDesignMode` |
+| Export contract and escaping/filename helpers | `@axis-love/design` | `DesignHtmlExportBuilder`, `DesignCatalogHtmlOptions`, `escapeHtml`, `ensureHtmlFilename`, `suggestDesignExportFilename` |
+| Catalog UI, catalog CSS, showcase theme, HTML writer | Product shell | `kmd/src/components/design/` |
+
+Rationale:
+
+1. **Package boundaries forbid it.** `kmd-web/AGENTS.md` states that `design` may
+   import `contracts` and `core` and must not import `browser` or `react`.
+   `DesignCatalog.tsx` is React and touches `document` directly; `exportHtml.ts`
+   depends on `react-dom/server` and reads `sheet.cssRules`. Extraction would
+   either break that rule or force a second React-dependent design entry point.
+2. **The showcase theme is product identity, not a contract.** `showcaseTheme.ts`
+   is 2,288 lines of one specific catalog look, paired with 741 lines of
+   `DesignCatalog.css`. Shipping it from a library would freeze kmd's visual
+   design into a published API surface and version it against consumers who want
+   a different one.
+3. **No second consumer needs the rendering.** The extraction targets beyond the
+   two React products — the Unity and native ports in the North Star — cannot use
+   a React catalog or a `renderToStaticMarkup` writer at all. They need the IR,
+   which they already get.
+4. **The contract already carries the reuse.** The parts genuinely worth sharing —
+   escaping, filename derivation, the builder shape — are in
+   `packages/design/src/export.ts` and are documented as the package surface.
+
+Consequence for hosts: rendering a design catalog or exporting it to HTML is
+explicit integration work. A host runs the pipeline, implements
+`DesignHtmlExportBuilder` with its own rendering technology, and supplies its own
+CSS via `DesignCatalogHtmlOptions.catalogCss`. Nothing about design presentation
+happens automatically.
+
+Revisit this decision only if a third consumer needs the *same* catalog
+presentation. Even then, a React catalog belongs in `kmd-web/react` (or a new
+`design-react` package), never in the DOM-free `design` package.
 
 ---
 
