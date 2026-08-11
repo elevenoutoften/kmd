@@ -80,6 +80,21 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
 
     readerRef.current = reader;
 
+    // Apply a user-supplied designMD theme (KMD_DESIGN_MD env var, or
+    // DESIGN.md next to the executable) if one exists. Non-fatal by
+    // contract: a missing or invalid theme leaves the default themes.
+    void (async () => {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        const designSource = await invoke<string | null>("load_design_theme");
+        if (designSource && readerRef.current === reader) {
+          await reader.setDesignSource(designSource);
+        }
+      } catch {
+        // No Tauri runtime (tests, plain browser) or no theme — defaults apply.
+      }
+    })();
+
     return () => {
       reader.dispose();
       readerRef.current = null;

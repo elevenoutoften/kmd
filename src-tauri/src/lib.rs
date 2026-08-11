@@ -42,6 +42,7 @@ pub fn run() {
             commands::list_recent_files,
             commands::add_recent_file,
             commands::export_html,
+            commands::load_design_theme,
         ])
         .build(tauri::generate_context!())
         .expect("error while running kmd")

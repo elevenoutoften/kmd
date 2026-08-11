@@ -565,6 +565,31 @@ pub fn export_html(path: String, html: String) -> Result<(), String> {
     fs::write(export_path, html).map_err(|e| format!("cannot write HTML export: {e}"))
 }
 
+/// Upper bound for a custom design theme file; a DESIGN.md past this size is
+/// ignored rather than truncated.
+const MAX_DESIGN_THEME_BYTES: u64 = 1_048_576;
+
+/// Load a user-supplied designMD theme, if one exists.
+///
+/// Lookup order: the file named by the `KMD_DESIGN_MD` environment variable,
+/// else `DESIGN.md` in the directory containing the kmd executable. Returns
+/// `None` when no readable file is found — a missing or unreadable theme is
+/// never an error, the reader just keeps its default themes.
+#[tauri::command]
+pub fn load_design_theme() -> Option<String> {
+    let path = std::env::var_os("KMD_DESIGN_MD")
+        .map(PathBuf::from)
+        .or_else(|| Some(std::env::current_exe().ok()?.parent()?.join("DESIGN.md")))?;
+
+    let metadata = fs::metadata(&path).ok()?;
+    if !metadata.is_file() || metadata.len() > MAX_DESIGN_THEME_BYTES {
+        return None;
+    }
+
+    let bytes = fs::read(&path).ok()?;
+    Some(String::from_utf8_lossy(&bytes).into_owned())
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
