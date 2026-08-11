@@ -76,6 +76,11 @@ export function Reader({ content, filePath, onOpenDocument }: ReaderProps) {
       onRendered: () => {
         setDocumentEpoch((epoch) => epoch + 1);
       },
+      // Scope a user-supplied DESIGN.md theme at <html>: the app chrome
+      // resolves its --color-* aliases on :root, and <html> also carries
+      // [data-theme], so overrides there restyle the whole window and
+      // both alias layers re-resolve against the custom values.
+      designThemeRoot: document.documentElement,
     });
 
     readerRef.current = reader;
