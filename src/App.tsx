@@ -8,6 +8,7 @@ import { detectDesignDocumentCheap } from "@axis-love/design";
 import { checkForAppUpdates } from "@/updater";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
+import { useDesignTheme } from "@/hooks/useDesignTheme";
 import { useDocumentState } from "@/hooks/useDocumentState";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { isTauriRuntime } from "@/utils/platform";
@@ -38,6 +39,7 @@ async function pickFile(): Promise<string | null> {
 }
 
 function AppInner() {
+  useDesignTheme();
   const { toasts, toast, dismiss } = useToast();
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const { content, filePath, documentName, openDocument, closeDocument } = useDocumentState();
