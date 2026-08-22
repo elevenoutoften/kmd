@@ -1,10 +1,10 @@
 [package]
 name = "kmd"
-version = "0.3.0"
+version = "0.4.0"
 description = "Kawaii MD reader"
 authors = ["kmd contributors"]
 license = "MIT"
-repository = "https://github.com/elevenoutoften/kmd"
+repository = "https://github.com/axis-love/kmd"
 edition = "2021"
 
 [lib]

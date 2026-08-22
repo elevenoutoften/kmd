@@ -1,17 +1,17 @@
 {
   "name": "kmd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Kawaii MD reader: a local-first desktop Markdown reader with first-class DESIGN.md support.",
   "license": "MIT",
   "author": "kmd contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elevenoutoften/kmd.git"
+    "url": "git+https://github.com/axis-love/kmd.git"
   },
   "bugs": {
-    "url": "https://github.com/elevenoutoften/kmd/issues"
+    "url": "https://github.com/axis-love/kmd/issues"
   },
-  "homepage": "https://github.com/elevenoutoften/kmd#readme",
+  "homepage": "https://github.com/axis-love/kmd#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -26,17 +26,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@axis-love/contracts": "file:../kmd-web/packages/contracts",
-    "@axis-love/core": "file:../kmd-web/packages/core",
-    "@axis-love/browser": "file:../kmd-web/packages/browser",
-    "@axis-love/react": "file:../kmd-web/packages/react",
-    "@axis-love/element": "file:../kmd-web/packages/element",
-    "@axis-love/styles": "file:../kmd-web/packages/styles",
-    "@axis-love/design": "file:../kmd-web/packages/design",
-    "@axis-love/highlighting": "file:../kmd-web/packages/highlighting",
-    "@axis-love/mermaid": "file:../kmd-web/packages/mermaid",
-    "@axis-love/math": "file:../kmd-web/packages/math",
-    "@axis-love/kmd-web": "file:../kmd-web/packages/kmd-web",
+    "@axis-love/contracts": "^0.2.0",
+    "@axis-love/core": "^0.2.0",
+    "@axis-love/browser": "^0.2.0",
+    "@axis-love/react": "^0.2.0",
+    "@axis-love/element": "^0.2.0",
+    "@axis-love/styles": "^0.2.0",
+    "@axis-love/design": "^0.2.0",
+    "@axis-love/highlighting": "^0.2.0",
+    "@axis-love/mermaid": "^0.2.0",
+    "@axis-love/math": "^0.2.0",
+    "@axis-love/kmd-web": "^0.2.0",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2.5.4",

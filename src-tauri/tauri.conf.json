@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicerdicer/tauri-v2-schema/main/tauri.schema.json",
   "productName": "kmd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "identifier": "io.github.elevenoutoften.kmd",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -70,7 +70,7 @@
       "active": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUwMzI5NzA2NDIxOUUyQTIKUldTaTRobENCcGN5NENOQ2ZaOEMzTE12YWpLYktXMlNSczg4S2FTbEdpMmt3K2MvM2hCUUI1bW8K",
       "endpoints": [
-        "https://github.com/elevenoutoften/kmd/releases/latest/download/latest.json"
+        "https://github.com/axis-love/kmd/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"

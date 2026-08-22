@@ -149,7 +149,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "kmd v__VERSION__"
-          releaseBody: "## Downloads\n\n### macOS\n- **Apple Silicon (M1/M2/M3/M4)** → `kmd_0.3.0_aarch64.dmg`\n- **Intel (x86_64)** → `kmd_0.3.0_x64.dmg`\n\n### Windows\n- **x86_64** → `kmd_0.3.0_x64-setup.exe` (installer) or `kmd_0.3.0_windows-x64-portable.exe` (portable)\n- **MSI** → `kmd_0.3.0_x64_en-US.msi`\n\n### Linux (Ubuntu / Debian)\n- **x86_64** → `kmd_0.3.0_amd64.deb`\n\n---\n\n### What's new\n- Local document links\n- Code block copy buttons\n- Two-phase morph rendering with outline scroll-spy\n- Recent files deduplication and caching\n- Welcome screen navigation\n- Horizontal scroll for wide tables\n- Respects prefers-reduced-motion\n- Security: stripped raw HTML buttons from content\n- Fixed syntax highlighting and Mermaid in production builds"
+          releaseBody: "## Downloads\n\n### macOS\n- **Apple Silicon (M1/M2/M3/M4)** → `kmd___VERSION___aarch64.dmg`\n- **Intel (x86_64)** → `kmd___VERSION___x64.dmg`\n\n### Windows\n- **x86_64** → `kmd___VERSION___x64-setup.exe` (installer) or `kmd___VERSION___windows-x64-portable.exe` (portable)\n- **MSI** → `kmd___VERSION___x64_en-US.msi`\n\n### Linux (Ubuntu / Debian)\n- **x86_64** → `kmd___VERSION___amd64.deb`\n\n---\n\nSee the [kmd changelog](https://github.com/axis-love/kmd/blob/main/CHANGELOG.md) for what's new in this release."
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
