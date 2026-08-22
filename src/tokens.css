@@ -26,6 +26,7 @@
 :root {
   /* Typography */
   --font-body: var(--kmd-font-body);
+  --font-heading: var(--kmd-font-heading);
   --font-mono: var(--kmd-font-mono);
 
   --font-size-headline-lg: var(--kmd-font-size-headline-lg);
